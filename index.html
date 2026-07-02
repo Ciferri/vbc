@@ -591,17 +591,17 @@
 <div class="app-header">
   <div class="app-title">
     Very Breizh <span class="cup">Cup</span>
-    <span class="top3">🐾 Le Top 3 — Pronostics</span>
+    <span class="top3">Le Top 3 — Pronostics</span>
   </div>
 </div>
-<div class="closed-banner" id="closedBanner">⛔ Paris clôturés — Aucune nouvelle inscription</div>
+<div class="closed-banner" id="closedBanner">Paris clôturés — Aucune nouvelle inscription</div>
 
 <!-- TAB CONTENTS -->
 <div id="tabJoueur" class="tab-content active">
   <!-- PLAYER FORM -->
   <div id="playerFormSection">
     <div class="card">
-      <div class="card-title">🎫 Mon pronostic</div>
+      <div class="card-title">Mon pronostic</div>
       <label class="field-label">Prénom</label>
       <input type="text" id="playerPrenom" class="field-input" placeholder="Ex : Marie" autocomplete="off">
       <label class="field-label">Nom</label>
@@ -611,42 +611,42 @@
     </div>
 
     <div class="card">
-      <div class="card-title">🏟️ Épreuve</div>
+      <div class="card-title">Épreuve</div>
       <label class="field-label">Choisis la catégorie sur laquelle parier</label>
       <select id="categorySelect" class="field-select" onchange="onCategoryChange()">
         <option value="">— Sélectionner une catégorie —</option>
-        <option value="S">🐕 Catégorie S — Small</option>
-        <option value="M">🐕 Catégorie M — Medium</option>
-        <option value="I">🐕 Catégorie I — Intermediate</option>
-        <option value="L">🐕 Catégorie L — Large</option>
+        <option value="S">Catégorie S — Small</option>
+        <option value="M">Catégorie M — Medium</option>
+        <option value="I">Catégorie I — Intermediate</option>
+        <option value="L">Catégorie L — Large</option>
       </select>
     </div>
 
     <div class="card" id="podiumCard" style="display:none">
-      <div class="card-title">🏆 Mon Top 3 — <span id="podiumCardCat"></span></div>
-      <label class="field-label">🥇 1ère place</label>
+      <div class="card-title">Mon Top 3 — <span id="podiumCardCat"></span></div>
+      <label class="field-label">1ère place</label>
       <select id="pick1" class="field-select" onchange="syncSelects()">
         <option value="">— Choisir un binôme —</option>
       </select>
-      <label class="field-label">🥈 2ème place</label>
+      <label class="field-label">2ème place</label>
       <select id="pick2" class="field-select" onchange="syncSelects()">
         <option value="">— Choisir un binôme —</option>
       </select>
-      <label class="field-label">🥉 3ème place</label>
+      <label class="field-label">3ème place</label>
       <select id="pick3" class="field-select" onchange="syncSelects()">
         <option value="">— Choisir un binôme —</option>
       </select>
     </div>
 
     <div id="playerFormError" class="alert alert-red" style="display:none"></div>
-    <button class="btn-lime" onclick="submitBet()">🎯 Valider mon pari — 2 €</button>
+    <button class="btn-lime" onclick="submitBet()">Valider mon pari — 2 €</button>
   </div>
 
   <!-- TICKET DISPLAY -->
   <div id="ticketSection" style="display:none">
     <div class="ticket">
       <div class="ticket-header">
-        <span>🐾 Very Breizh Cup</span>
+        <span>Very Breizh Cup</span>
         <span id="tktStatusBadge" class="status-badge status-pending">En attente</span>
       </div>
       <div class="ticket-body">
@@ -663,7 +663,7 @@
     </div>
 
     <div id="paymentAlert" class="alert alert-red" style="margin-top:12px">
-      💳 Rendez-vous au stand pour valider votre paiement de <strong>2 €</strong>
+      Rendez-vous au stand pour valider votre paiement de <strong>2 €</strong>
     </div>
 
     <button class="btn-lydia" onclick="showLydiaModal()">💜 Payer avec Lydia — 2 €</button>
@@ -673,7 +673,7 @@
   <!-- TENDANCES / FAVORIS -->
   <hr class="section-divider">
   <div class="card">
-    <div class="card-title">🔥 Tendances / Favoris</div>
+    <div class="card-title">Tendances / Favoris</div>
     <label class="field-label">Filtrer par catégorie</label>
     <select id="trendCatFilter" class="field-select" onchange="renderFavoritesTrend()">
       <option value="S">S — Small</option>
@@ -681,7 +681,7 @@
       <option value="I">I — Intermediate</option>
       <option value="L">L — Large</option>
     </select>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--lime);margin:4px 0 10px">🏆 Podium probable du public</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--lime);margin:4px 0 10px">Podium probable du public</div>
     <div id="favoritesTrendList"></div>
     <div style="font-size:0.74rem;color:var(--muted);margin-top:10px;line-height:1.4">
       Indice calculé sur l'ensemble des pronostics enregistrés (payés et en attente) : 3 pts pour une place de 1er, 2 pts pour une place de 2ème, 1 pt pour une place de 3ème. Plus l'indice est bas, plus le binôme est favori du public.
@@ -702,7 +702,7 @@
   <div id="standTicketResult" style="display:none">
     <div class="ticket" id="standTicketCard">
       <div class="ticket-header">
-        <span>🐾 Very Breizh Cup</span>
+        <span>Very Breizh Cup</span>
         <span id="standTktStatusBadge" class="status-badge"></span>
       </div>
       <div class="ticket-body">
@@ -763,7 +763,7 @@
 
     <!-- FINALISTES -->
     <div class="card">
-      <div class="card-title">🐕 Finalistes</div>
+      <div class="card-title">Finalistes</div>
       <label class="field-label">Conducteur</label>
       <input type="text" id="newConducteur" class="field-input" placeholder="Ex : Sophie Martin" autocomplete="off">
       <label class="field-label">Chien</label>
@@ -782,9 +782,9 @@
 
     <!-- CONTRÔLE -->
     <div class="card">
-      <div class="card-title">🧪 Données de test</div>
+      <div class="card-title">Données de test</div>
       <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">Génère des tickets aléatoires (pronostics + statuts payé/en attente) répartis sur toutes les catégories pour tester l'interface admin avec du volume.</p>
-      <button class="btn-outline" onclick="generateTestTickets(100)">⚡ Générer 100 tickets de test</button>
+      <button class="btn-outline" onclick="generateTestTickets(100)">Générer 100 tickets de test</button>
       <button class="btn-sm-red" style="width:100%;margin-top:8px;border-radius:8px;padding:10px" onclick="clearAllTickets()">🗑️ Supprimer tous les tickets</button>
     </div>
 
@@ -797,43 +797,43 @@
 
     <!-- PODIUM OFFICIEL -->
     <div class="card">
-      <div class="card-title">🏁 Podium officiel</div>
+      <div class="card-title">Podium officiel</div>
       <label class="field-label">Catégorie de l'épreuve</label>
       <select id="officialCat" class="field-select" onchange="onOfficialCatChange()">
         <option value="">— Sélectionner une catégorie —</option>
-        <option value="S">🐕 Catégorie S — Small</option>
-        <option value="M">🐕 Catégorie M — Medium</option>
-        <option value="I">🐕 Catégorie I — Intermediate</option>
-        <option value="L">🐕 Catégorie L — Large</option>
+        <option value="S">Catégorie S — Small</option>
+        <option value="M">Catégorie M — Medium</option>
+        <option value="I">Catégorie I — Intermediate</option>
+        <option value="L">Catégorie L — Large</option>
       </select>
       <div id="officialPodiumFields" style="display:none">
-        <label class="field-label">🥇 1er</label>
+        <label class="field-label">1er</label>
         <select id="official1" class="field-select">
           <option value="">— Résultat réel —</option>
         </select>
-        <label class="field-label">🥈 2ème</label>
+        <label class="field-label">2ème</label>
         <select id="official2" class="field-select">
           <option value="">— Résultat réel —</option>
         </select>
-        <label class="field-label">🥉 3ème</label>
+        <label class="field-label">3ème</label>
         <select id="official3" class="field-select">
           <option value="">— Résultat réel —</option>
         </select>
-        <button class="btn-lime" onclick="calculateWinners()" style="margin-top:4px">🏆 Calculer les gagnants</button>
+        <button class="btn-lime" onclick="calculateWinners()" style="margin-top:4px">Calculer les gagnants</button>
       </div>
     </div>
 
     <!-- RÉSULTATS -->
     <div id="resultsSection" style="display:none">
       <div class="card">
-        <div class="card-title">🎉 Résultats du tirage</div>
+        <div class="card-title">Résultats du tirage</div>
         <div id="resultsContent"></div>
       </div>
     </div>
 
     <!-- TICKETS LIST -->
     <div class="card">
-      <div class="card-title">📋 Tous les tickets</div>
+      <div class="card-title">Tous les tickets</div>
       <div class="stat-row" id="adminStatsRow"></div>
       <select id="ticketsFilterCat" class="field-select" style="margin-bottom:10px" onchange="renderAllTickets()">
         <option value="">Toutes les catégories</option>
@@ -984,7 +984,7 @@ function renderFinalistList() {
     `<div class="finalist-item">
       <span class="finalist-num">#${String(i+1).padStart(2,'0')}</span>
       <div class="finalist-info">
-        <div class="finalist-name">🐕 ${f.chien}</div>
+        <div class="finalist-name">${f.chien}</div>
         <div class="finalist-dog">${f.conducteur} — <span style="color:var(--lime);font-size:0.78rem">${f.cat}</span></div>
       </div>
       <button class="btn-sm-red" onclick="removeFinalist(${f.id})">✕</button>
