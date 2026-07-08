@@ -3,605 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Very Breizh Cup — Le Top 3</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&display=swap');
-
-  :root {
-    --lime: #99cc33;
-    --lime-dark: #7aaa1a;
-    --red: #e63946;
-    --black: #0a0a0a;
-    --dark: #141414;
-    --card: #1e1e1e;
-    --light: #f5f5f5;
-    --muted: #9a9a9a;
-    --border: #2e2e2e;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    font-family: 'Barlow', sans-serif;
-    background: var(--black);
-    color: var(--light);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* HEADER */
-  .app-header {
-    background: var(--dark);
-    border-bottom: 3px solid var(--lime);
-    padding: 14px 16px 10px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .app-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.6rem;
-    letter-spacing: 0.02em;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-  .app-title .cup { color: var(--red); }
-  .app-title .top3 {
-    color: var(--lime);
-    font-size: 0.85rem;
-    display: block;
-    letter-spacing: 0.15em;
-    font-weight: 700;
-  }
-  .closed-banner {
-    background: var(--red);
-    color: white;
-    text-align: center;
-    padding: 6px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    display: none;
-  }
-
-  /* TABS */
-  .tab-bar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: var(--dark);
-    border-top: 2px solid var(--border);
-    display: flex;
-    z-index: 200;
-  }
-  .tab-btn {
-    flex: 1;
-    padding: 10px 4px 12px;
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    transition: color 0.2s;
-    border-top: 3px solid transparent;
-  }
-  .tab-btn.active {
-    color: var(--lime);
-    border-top-color: var(--lime);
-  }
-  .tab-icon { font-size: 1.25rem; }
-
-  /* CONTENT */
-  .tab-content { display: none; padding: 16px 16px 80px; }
-  .tab-content.active { display: block; }
-
-  /* CARDS */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 14px;
-  }
-  .card-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--lime);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* FORM ELEMENTS */
-  .field-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 600;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    margin-bottom: 5px;
-    display: block;
-  }
-  .field-input, .field-select {
-    width: 100%;
-    background: #111;
-    border: 1.5px solid var(--border);
-    border-radius: 7px;
-    color: var(--light);
-    font-family: 'Barlow', sans-serif;
-    font-size: 0.95rem;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
-    appearance: none;
-    -webkit-appearance: none;
-  }
-  .field-input:focus, .field-select:focus {
-    outline: none;
-    border-color: var(--lime);
-  }
-  .field-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2399cc33' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
-  .field-select option { background: #1e1e1e; }
-
-  /* BUTTONS */
-  .btn-lime {
-    width: 100%;
-    background: var(--lime);
-    color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.05rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 8px;
-    padding: 13px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-  }
-  .btn-lime:hover { background: var(--lime-dark); }
-  .btn-lime:active { transform: scale(0.98); }
-  .btn-lime:disabled { background: #444; color: #888; cursor: not-allowed; }
-
-  .btn-red {
-    width: 100%;
-    background: var(--red);
-    color: white;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.05rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 8px;
-    padding: 13px;
-    cursor: pointer;
-    transition: background 0.2s;
-    margin-top: 8px;
-  }
-  .btn-red:hover { background: #c0202c; }
-
-  .btn-lydia {
-    width: 100%;
-    background: #552d8a;
-    color: white;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.05rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 8px;
-    padding: 13px;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: background 0.2s;
-  }
-  .btn-lydia:hover { background: #3e2068; }
-
-  .btn-outline {
-    width: 100%;
-    background: transparent;
-    color: var(--lime);
-    border: 1.5px solid var(--lime);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.95rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-radius: 8px;
-    padding: 10px;
-    cursor: pointer;
-    transition: background 0.2s;
-    margin-top: 6px;
-  }
-  .btn-outline:hover { background: rgba(153,204,51,0.12); }
-
-  .btn-sm {
-    background: var(--lime);
-    color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-  .btn-sm-red {
-    background: var(--red);
-    color: white;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.8rem;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-
-  /* TICKET */
-  .ticket {
-    background: var(--dark);
-    border: 2px solid var(--lime);
-    border-radius: 12px;
-    overflow: hidden;
-    margin-top: 4px;
-  }
-  .ticket-header {
-    background: var(--lime);
-    color: var(--black);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    padding: 10px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .ticket-body { padding: 16px; }
-  .ticket-num {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--lime);
-    letter-spacing: 0.05em;
-  }
-  .ticket-player {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 1.3rem;
-    margin: 6px 0 10px;
-  }
-  .podium-line {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 7px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
-  }
-  .podium-line:last-child { border-bottom: none; }
-  .medal { font-size: 1.2rem; width: 24px; }
-  .podium-name { flex: 1; color: var(--light); }
-  .podium-cat {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.75rem;
-    color: var(--muted);
-    background: var(--border);
-    padding: 2px 6px;
-    border-radius: 4px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  .status-badge {
-    display: inline-block;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 4px 10px;
-    border-radius: 4px;
-    margin-top: 12px;
-  }
-  .status-pending { background: rgba(230,57,70,0.2); color: var(--red); border: 1px solid var(--red); }
-  .status-paid { background: rgba(153,204,51,0.2); color: var(--lime); border: 1px solid var(--lime); }
-
-  /* QR CODE */
-  .qr-wrapper {
-    text-align: center;
-    padding: 12px 0 4px;
-  }
-  .qr-wrapper canvas {
-    border: 3px solid var(--lime);
-    border-radius: 6px;
-    background: white;
-  }
-  .ticket-dashed {
-    border-top: 2px dashed var(--border);
-    margin: 12px 0;
-  }
-
-  /* FINALISTS LIST */
-  .finalist-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #111;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-  }
-  .finalist-num {
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--lime);
-    font-size: 0.85rem;
-    width: 26px;
-  }
-  .finalist-info { flex: 1; margin-left: 8px; }
-  .finalist-name { font-weight: 600; font-size: 0.95rem; }
-  .finalist-dog { font-size: 0.82rem; color: var(--muted); }
-
-  /* FAVORITES TREND */
-  .trend-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #111;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-  }
-  .trend-item.rank-1 { border-color: var(--lime); background: rgba(153,204,51,0.08); }
-  .trend-rank {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.3rem;
-    color: var(--muted);
-    width: 28px;
-    text-align: center;
-  }
-  .trend-item.rank-1 .trend-rank { color: var(--lime); }
-  .trend-info { flex: 1; }
-  .trend-name { font-weight: 700; font-size: 0.95rem; }
-  .trend-handler { font-size: 0.78rem; color: var(--muted); }
-  .trend-bar-wrap {
-    background: var(--border);
-    border-radius: 4px;
-    height: 5px;
-    margin-top: 5px;
-    overflow: hidden;
-  }
-  .trend-bar-fill {
-    height: 100%;
-    background: var(--lime);
-    border-radius: 4px;
-  }
-  .trend-index {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.82rem;
-    color: var(--lime);
-    text-align: right;
-    min-width: 48px;
-  }
-
-  /* RESULTS */
-  .result-winner {
-    background: rgba(153,204,51,0.1);
-    border: 2px solid var(--lime);
-    border-radius: 10px;
-    padding: 14px;
-    margin-bottom: 10px;
-  }
-  .result-winner-name {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.3rem;
-    color: var(--lime);
-  }
-  .result-close {
-    background: rgba(255,165,0,0.1);
-    border: 1px solid #f90;
-    border-radius: 10px;
-    padding: 14px;
-    margin-bottom: 10px;
-  }
-
-  /* DIVIDER */
-  .section-divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 16px 0;
-  }
-
-  /* ALERT */
-  .alert {
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 0.9rem;
-    margin-bottom: 12px;
-  }
-  .alert-red { background: rgba(230,57,70,0.15); border: 1px solid var(--red); color: #ff8a92; }
-  .alert-lime { background: rgba(153,204,51,0.15); border: 1px solid var(--lime); color: #b5e455; }
-  .alert-yellow { background: rgba(255,165,0,0.12); border: 1px solid #f90; color: #ffb84d; }
-
-  /* SEARCH */
-  .search-wrap { position: relative; margin-bottom: 12px; }
-  .search-wrap input { padding-left: 40px !important; margin-bottom: 0; }
-  .search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1.1rem;
-    pointer-events: none;
-  }
-
-  /* PENDING QUEUE */
-  .queue-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #111;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--red);
-    border-radius: 7px;
-    padding: 10px 12px;
-    margin-bottom: 7px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .queue-item:hover { background: #1a1a1a; border-color: var(--lime); }
-  .queue-item:active { transform: scale(0.99); }
-  .queue-cat-tag {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 0.85rem;
-    color: var(--black);
-    background: var(--lime);
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .queue-info { flex: 1; min-width: 0; }
-  .queue-name { font-weight: 600; font-size: 0.92rem; }
-  .queue-num { font-family: 'Share Tech Mono', monospace; font-size: 0.74rem; color: var(--muted); }
-  .queue-arrow { color: var(--muted); font-size: 1.1rem; }
-  .queue-empty {
-    text-align: center;
-    padding: 18px 10px;
-    color: var(--lime);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  /* STAT PILL */
-  .stat-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .stat-pill {
-    background: #1e1e1e;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .stat-pill .num {
-    font-weight: 900;
-    color: var(--lime);
-    font-size: 1rem;
-  }
-
-  /* SCROLL */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: var(--dark); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* Toast */
-  #toast {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--card);
-    border: 1.5px solid var(--lime);
-    color: var(--light);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.9rem;
-    padding: 10px 20px;
-    border-radius: 8px;
-    opacity: 0;
-    transition: all 0.3s;
-    pointer-events: none;
-    z-index: 999;
-    white-space: nowrap;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-  #toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* LYDIA modal */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 500;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding: 16px;
-  }
-  .modal-box {
-    background: var(--card);
-    border: 1.5px solid var(--border);
-    border-radius: 16px 16px 12px 12px;
-    padding: 24px 20px;
-    width: 100%;
-    max-width: 420px;
-    text-align: center;
-  }
-  .modal-box h3 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.4rem;
-    text-transform: uppercase;
-    color: #552d8a;
-    margin-bottom: 8px;
-  }
-</style>
+<title>Very Breizh Cup — Mon pronostic</title>
+<link rel="stylesheet" href="js/style.css">
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="app-header">
-  <div class="app-title">
-    Very Breizh <span class="cup">Cup</span>
-    <span class="top3">Le Top 3 — Pronostics</span>
-  </div>
+  <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">🐾 Le Top 3 — Pronostics</span></div>
+  <span class="role-badge">Joueur</span>
 </div>
-<div class="closed-banner" id="closedBanner">Paris clôturés — Aucune nouvelle inscription</div>
+<div id="closedBanner" style="display:none;background:var(--red);color:#fff;text-align:center;padding:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase">⛔ Paris clôturés — Aucune nouvelle inscription</div>
 
-<!-- TAB CONTENTS -->
-<div id="tabJoueur" class="tab-content active">
-  <!-- PLAYER FORM -->
+<div class="page">
   <div id="playerFormSection">
     <div class="card">
-      <div class="card-title">Mon pronostic</div>
+      <div class="card-title">🎫 Mon pronostic</div>
       <label class="field-label">Prénom</label>
       <input type="text" id="playerPrenom" class="field-input" placeholder="Ex : Marie" autocomplete="off">
       <label class="field-label">Nom</label>
@@ -609,479 +25,99 @@
       <label class="field-label">Téléphone</label>
       <input type="tel" id="playerTel" class="field-input" placeholder="Ex : 06 12 34 56 78" autocomplete="off">
     </div>
-
     <div class="card">
-      <div class="card-title">Épreuve</div>
-      <label class="field-label">Choisis la catégorie sur laquelle parier</label>
+      <div class="card-title">🏟️ Épreuve</div>
+      <label class="field-label">Catégorie sur laquelle parier</label>
       <select id="categorySelect" class="field-select" onchange="onCategoryChange()">
         <option value="">— Sélectionner une catégorie —</option>
-        <option value="S">Catégorie S — Small</option>
-        <option value="M">Catégorie M — Medium</option>
-        <option value="I">Catégorie I — Intermediate</option>
-        <option value="L">Catégorie L — Large</option>
+        <option value="S">S — Small</option>
+        <option value="M">M — Medium</option>
+        <option value="I">I — Intermediate</option>
+        <option value="L">L — Large</option>
       </select>
     </div>
-
     <div class="card" id="podiumCard" style="display:none">
-      <div class="card-title">Mon Top 3 — <span id="podiumCardCat"></span></div>
-      <label class="field-label">1ère place</label>
-      <select id="pick1" class="field-select" onchange="syncSelects()">
-        <option value="">— Choisir un binôme —</option>
-      </select>
-      <label class="field-label">2ème place</label>
-      <select id="pick2" class="field-select" onchange="syncSelects()">
-        <option value="">— Choisir un binôme —</option>
-      </select>
-      <label class="field-label">3ème place</label>
-      <select id="pick3" class="field-select" onchange="syncSelects()">
-        <option value="">— Choisir un binôme —</option>
-      </select>
+      <div class="card-title">🏆 Mon Top 3 — <span id="podiumCardCat"></span></div>
+      <label class="field-label">🥇 1ère place</label>
+      <select id="pick1" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
+      <label class="field-label">🥈 2ème place</label>
+      <select id="pick2" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
+      <label class="field-label">🥉 3ème place</label>
+      <select id="pick3" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
     </div>
-
     <div id="playerFormError" class="alert alert-red" style="display:none"></div>
-    <button class="btn-lime" onclick="submitBet()">Valider mon pari — 2 €</button>
+    <button class="btn-lime" id="submitBtn" onclick="submitBet()">🎯 Valider mon pari — 2 €</button>
   </div>
 
-  <!-- TICKET DISPLAY -->
   <div id="ticketSection" style="display:none">
     <div class="ticket">
-      <div class="ticket-header">
-        <span>Very Breizh Cup</span>
-        <span id="tktStatusBadge" class="status-badge status-pending">En attente</span>
-      </div>
+      <div class="ticket-header"><span>🐾 Very Breizh Cup</span><span id="tktStatusBadge" class="status-badge status-pending">⏳ En attente</span></div>
       <div class="ticket-body">
         <div class="ticket-num" id="tktNum"></div>
         <div class="ticket-player" id="tktPlayer"></div>
         <div class="ticket-dashed"></div>
         <div id="tktPodium"></div>
-        <div class="qr-wrapper">
-          <div class="ticket-dashed"></div>
-          <canvas id="qrCanvas" width="130" height="130"></canvas>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;color:var(--muted);margin-top:6px;letter-spacing:0.08em;text-transform:uppercase">Scanner au stand de paiement</div>
-        </div>
+        <div class="qr-wrapper"><div class="ticket-dashed"></div><canvas id="qrCanvas" width="130" height="130"></canvas>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;color:var(--muted);margin-top:6px;letter-spacing:.08em;text-transform:uppercase">Scanner au stand de paiement</div></div>
       </div>
     </div>
-
-    <div id="paymentAlert" class="alert alert-red" style="margin-top:12px">
-      Rendez-vous au stand pour valider votre paiement de <strong>2 €</strong>
-    </div>
-
-    <button class="btn-lydia" onclick="showLydiaModal()">💜 Payer avec Lydia — 2 €</button>
-    <button class="btn-outline" onclick="newBet()">＋ Nouveau pari</button>
+    <div class="alert alert-red" style="margin-top:12px">💳 Rendez-vous au stand pour valider votre paiement de <strong>2 €</strong></div>
+    <button class="btn-outline" onclick="newBet()" style="margin-top:8px">＋ Nouveau pari</button>
   </div>
 
-  <!-- TENDANCES / FAVORIS -->
   <hr class="section-divider">
   <div class="card">
-    <div class="card-title">Tendances / Favoris</div>
+    <div class="card-title">🔥 Tendances / Favoris</div>
     <label class="field-label">Filtrer par catégorie</label>
     <select id="trendCatFilter" class="field-select" onchange="renderFavoritesTrend()">
-      <option value="S">S — Small</option>
-      <option value="M">M — Medium</option>
-      <option value="I">I — Intermediate</option>
-      <option value="L">L — Large</option>
+      <option value="S">S — Small</option><option value="M">M — Medium</option>
+      <option value="I">I — Intermediate</option><option value="L">L — Large</option>
     </select>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--lime);margin:4px 0 10px">Podium probable du public</div>
-    <div id="favoritesTrendList"></div>
-    <div style="font-size:0.74rem;color:var(--muted);margin-top:10px;line-height:1.4">
-      Indice calculé sur l'ensemble des pronostics enregistrés (payés et en attente) : 3 pts pour une place de 1er, 2 pts pour une place de 2ème, 1 pt pour une place de 3ème. Plus l'indice est bas, plus le binôme est favori du public.
-    </div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.08em;color:var(--lime);margin:4px 0 10px">🏆 Podium probable du public</div>
+    <div id="favoritesTrendList"><div class="spinner"></div></div>
+    <div style="font-size:.74rem;color:var(--muted);margin-top:10px;line-height:1.4">3 pts pour un 1er, 2 pts pour un 2ème, 1 pt pour un 3ème. Plus l'indice est bas, plus le binôme est favori.</div>
   </div>
 </div>
 
-<div id="tabStand" class="tab-content">
-  <div class="card">
-    <div class="card-title">🔍 Rechercher un ticket</div>
-    <div class="search-wrap">
-      <span class="search-icon">🎫</span>
-      <input type="text" id="searchInput" class="field-input" placeholder="N° ticket (ex: VBC-00042)" autocomplete="off" oninput="searchTicket()">
-    </div>
-    <button class="btn-outline" onclick="searchTicket()" style="margin-top:0">Rechercher</button>
-  </div>
-
-  <div id="standTicketResult" style="display:none">
-    <div class="ticket" id="standTicketCard">
-      <div class="ticket-header">
-        <span>Very Breizh Cup</span>
-        <span id="standTktStatusBadge" class="status-badge"></span>
-      </div>
-      <div class="ticket-body">
-        <div class="ticket-num" id="standTktNum"></div>
-        <div class="ticket-player" id="standTktPlayer"></div>
-        <div class="ticket-dashed"></div>
-        <div id="standTktPodium"></div>
-      </div>
-    </div>
-    <div id="standPayBtn" style="margin-top:12px">
-      <button class="btn-lime" onclick="validatePayment()">✅ Valider le paiement — 2 €</button>
-    </div>
-    <div id="standAlreadyPaid" class="alert alert-lime" style="display:none;margin-top:12px">
-      ✅ Ce ticket est déjà marqué comme <strong>payé</strong>.
-    </div>
-  </div>
-
-  <div id="standNoResult" class="alert alert-red" style="display:none;margin-top:8px">
-    ❌ Aucun ticket trouvé pour ce numéro.
-  </div>
-
-  <hr class="section-divider">
-  <div class="card">
-    <div class="card-title">📊 Statistiques</div>
-    <div class="stat-row" id="statsRow">
-      <div class="stat-pill"><span class="num" id="statTotal">0</span> tickets</div>
-      <div class="stat-pill"><span class="num" id="statPaid">0</span> payés</div>
-      <div class="stat-pill"><span class="num" id="statPending">0</span> en attente</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">⏳ Reste à payer</div>
-    <select id="queueCatFilter" class="field-select" onchange="renderPendingQueue()">
-      <option value="">Toutes les catégories</option>
-      <option value="S">S — Small</option>
-      <option value="M">M — Medium</option>
-      <option value="I">I — Intermediate</option>
-      <option value="L">L — Large</option>
-    </select>
-    <div id="pendingQueueList" style="max-height:340px;overflow-y:auto"></div>
-  </div>
-</div>
-
-<div id="tabAdmin" class="tab-content">
-  <!-- Admin Auth -->
-  <div id="adminLoginSection">
-    <div class="card">
-      <div class="card-title">🔐 Accès Admin</div>
-      <label class="field-label">Mot de passe (breizh2026)</label>
-      <input type="password" id="adminPwd" class="field-input" placeholder="••••••••">
-      <div id="adminLoginError" class="alert alert-red" style="display:none">Mot de passe incorrect.</div>
-      <button class="btn-lime" onclick="adminLogin()">Connexion</button>
-    </div>
-  </div>
-
-  <div id="adminPanel" style="display:none">
-
-    <!-- FINALISTES -->
-    <div class="card">
-      <div class="card-title">Finalistes</div>
-      <label class="field-label">Conducteur</label>
-      <input type="text" id="newConducteur" class="field-input" placeholder="Ex : Sophie Martin" autocomplete="off">
-      <label class="field-label">Chien</label>
-      <input type="text" id="newChien" class="field-input" placeholder="Ex : Vaina" autocomplete="off">
-      <label class="field-label">Catégorie de taille</label>
-      <select id="newCat" class="field-select">
-        <option value="S">S — Small</option>
-        <option value="M">M — Medium</option>
-        <option value="I">I — Intermediate</option>
-        <option value="L">L — Large</option>
-      </select>
-      <button class="btn-sm" onclick="addFinalist()">＋ Ajouter le binôme</button>
-      <hr class="section-divider">
-      <div id="finalistList"></div>
-    </div>
-
-    <!-- CONTRÔLE -->
-    <div class="card">
-      <div class="card-title">Données de test</div>
-      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px">Génère des tickets aléatoires (pronostics + statuts payé/en attente) répartis sur toutes les catégories pour tester l'interface admin avec du volume.</p>
-      <button class="btn-outline" onclick="generateTestTickets(100)">Générer 100 tickets de test</button>
-      <button class="btn-sm-red" style="width:100%;margin-top:8px;border-radius:8px;padding:10px" onclick="clearAllTickets()">🗑️ Supprimer tous les tickets</button>
-    </div>
-
-    <div class="card">
-      <div class="card-title">⚙️ Contrôle des paris</div>
-      <div id="betsOpenMsg" class="alert alert-lime">✅ Paris ouverts — Les joueurs peuvent parier.</div>
-      <div id="betsClosedMsg" class="alert alert-red" style="display:none">⛔ Paris clôturés — Aucune nouvelle inscription.</div>
-      <button id="btnToggleBets" class="btn-red" onclick="toggleBets()">⛔ Clôturer les paris</button>
-    </div>
-
-    <!-- PODIUM OFFICIEL -->
-    <div class="card">
-      <div class="card-title">Podium officiel</div>
-      <label class="field-label">Catégorie de l'épreuve</label>
-      <select id="officialCat" class="field-select" onchange="onOfficialCatChange()">
-        <option value="">— Sélectionner une catégorie —</option>
-        <option value="S">Catégorie S — Small</option>
-        <option value="M">Catégorie M — Medium</option>
-        <option value="I">Catégorie I — Intermediate</option>
-        <option value="L">Catégorie L — Large</option>
-      </select>
-      <div id="officialPodiumFields" style="display:none">
-        <label class="field-label">1er</label>
-        <select id="official1" class="field-select">
-          <option value="">— Résultat réel —</option>
-        </select>
-        <label class="field-label">2ème</label>
-        <select id="official2" class="field-select">
-          <option value="">— Résultat réel —</option>
-        </select>
-        <label class="field-label">3ème</label>
-        <select id="official3" class="field-select">
-          <option value="">— Résultat réel —</option>
-        </select>
-        <button class="btn-lime" onclick="calculateWinners()" style="margin-top:4px">Calculer les gagnants</button>
-      </div>
-    </div>
-
-    <!-- RÉSULTATS -->
-    <div id="resultsSection" style="display:none">
-      <div class="card">
-        <div class="card-title">Résultats du tirage</div>
-        <div id="resultsContent"></div>
-      </div>
-    </div>
-
-    <!-- TICKETS LIST -->
-    <div class="card">
-      <div class="card-title">Tous les tickets</div>
-      <div class="stat-row" id="adminStatsRow"></div>
-      <select id="ticketsFilterCat" class="field-select" style="margin-bottom:10px" onchange="renderAllTickets()">
-        <option value="">Toutes les catégories</option>
-        <option value="S">S — Small</option>
-        <option value="M">M — Medium</option>
-        <option value="I">I — Intermediate</option>
-        <option value="L">L — Large</option>
-      </select>
-      <div id="allTicketsList" style="max-height:300px;overflow-y:auto"></div>
-    </div>
-
-  </div>
-</div>
-
-<!-- TAB BAR -->
-<nav class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('tabJoueur', this)">
-    <span class="tab-icon">🎫</span>Joueur
-  </button>
-  <button class="tab-btn" onclick="switchTab('tabStand', this)">
-    <span class="tab-icon">💳</span>Stand
-  </button>
-  <button class="tab-btn" onclick="switchTab('tabAdmin', this)">
-    <span class="tab-icon">⚙️</span>Admin
-  </button>
-</nav>
-
-<!-- TOAST -->
 <div id="toast"></div>
-
-<!-- LYDIA MODAL -->
-<div id="lydiaModal" class="modal-overlay" style="display:none" onclick="closeLydiaModal()">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <h3>💜 Paiement Lydia</h3>
-    <div style="font-size:2rem;margin:10px 0">💸</div>
-    <p style="font-size:0.9rem;color:var(--muted);margin-bottom:16px">Simulation du paiement de <strong style="color:var(--light)">2,00 €</strong> via Lydia</p>
-    <div style="background:#111;border-radius:8px;padding:12px;margin-bottom:14px">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:1.4rem;color:#552d8a">LYDIA.ME/VBC</div>
-      <div style="font-size:0.78rem;color:var(--muted);margin-top:4px">Lien de paiement fictif — démo uniquement</div>
-    </div>
-    <button class="btn-lydia" onclick="simulateLydia()" style="margin-bottom:8px">✅ Confirmer le paiement (simulation)</button>
-    <button class="btn-outline" onclick="closeLydiaModal()">Annuler</button>
-  </div>
-</div>
-
+<script src="js/supabase.js"></script>
 <script>
-// ===================== STORAGE =====================
-const LS_FINALISTS = 'vbc_finalists';
-const LS_TICKETS   = 'vbc_tickets';
-const LS_CLOSED    = 'vbc_closed';
-const ADMIN_PWD    = 'breizh2025';
+let finalists = [], betsClosed = false;
 
-const SIZE_LABELS = { S: 'Small', M: 'Medium', I: 'Intermediate', L: 'Large' };
-
-// Pools de noms pour génération aléatoire
-const TEST_PRENOMS = ['Léa','Hugo','Emma','Louis','Camille','Nathan','Chloé','Maël','Inès','Tom','Manon','Enzo','Jade','Noah','Lina','Paul','Anna','Théo','Lola','Axel','Eva','Liam','Zoé','Adam','Romane','Gabin','Juliette','Tiago','Clara','Mathis'];
-const TEST_NOMS = ['Le Roux','Pichon','Guillou','Le Bihan','Quéméner','Le Bras','Cariou','Le Gall','Quéré','Tanguy','Le Goff','Morvan','Riou','Bréhon','Caouissin','Floch','Le Berre','Salaün','Le Moal','Allain'];
-const DOG_NAMES = ['Vaina','Viper','Pixie','Sakura','Storm','Blitz','Ficelle','Praline','Echo','Nova','Cosmo','Mistral','Rumba','Cyclone','Zorro','Kiwi','Ember','Saphir','Onyx','Loupiote','Diamant','Fusée','Tornade','Bambou','Comète','Pépite','Eclair','Câline','Rocket','Mambo','Tango','Spark','Nuage','Indy','Wasabi','Cookie','Maverick','Luna','Rio','Volt'];
-const HANDLER_FIRST = ['Sophie','Thomas','Lucie','Kevin','Anaëlle','Romain','Marie','Yann','Camille','Erwan','Mélanie','Loïc','Julie','Gwen','Anthony','Maëlle','Pierrick','Solenn','Florian','Aurélie'];
-const HANDLER_LAST = ['Tanguy','Le Goff','Morvan','Riou','Bréhon','Caouissin','Le Bras','Quéré','Quéméner','Le Bihan','Guillou','Pichon','Le Roux','Cariou','Le Gall','Floch','Le Berre','Salaün','Le Moal','Allain'];
-
-function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
-function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
-
-function generateDefaultFinalists() {
-  const cats = ['S', 'M', 'I', 'L'];
-  const dogPool = shuffle(DOG_NAMES);
-  const handlerFirsts = shuffle(HANDLER_FIRST);
-  const handlerLasts = shuffle(HANDLER_LAST);
-  let id = 1;
-  const list = [];
-  let dogIdx = 0;
-  cats.forEach(cat => {
-    for (let i = 0; i < 10; i++) {
-      const chien = dogPool[dogIdx % dogPool.length] + (dogIdx >= dogPool.length ? ` ${Math.floor(dogIdx/dogPool.length)+1}` : '');
-      dogIdx++;
-      list.push({
-        id: id++,
-        conducteur: `${pick(handlerFirsts)} ${pick(handlerLasts)}`,
-        chien,
-        cat
-      });
-    }
-  });
-  return list;
-}
-
-function loadFinalists() {
-  const d = localStorage.getItem(LS_FINALISTS);
-  if (d) return JSON.parse(d);
-  const generated = generateDefaultFinalists();
-  saveFinalists(generated);
-  return generated;
-}
-function saveFinalists(f) { localStorage.setItem(LS_FINALISTS, JSON.stringify(f)); }
-
-function loadTickets() {
-  const d = localStorage.getItem(LS_TICKETS);
-  if (d) return JSON.parse(d);
-  return null; // signal: needs seeding, done after finalists are ready
-}
-function saveTickets(t) { localStorage.setItem(LS_TICKETS, JSON.stringify(t)); }
-
-function isBetsClosed() { return localStorage.getItem(LS_CLOSED) === '1'; }
-function setBetsClosed(v) { localStorage.setItem(LS_CLOSED, v ? '1' : '0'); }
-
-// ===================== INIT =====================
-let finalists = loadFinalists();
-let ticketsRaw = loadTickets();
-let tickets = ticketsRaw !== null ? ticketsRaw : [];
-let currentTicketId = null; // ticket shown on joueur tab
-let standCurrentTicket = null;
-
-window.addEventListener('DOMContentLoaded', () => {
-  if (ticketsRaw === null) {
-    // First launch: seed 100 demo tickets
-    generateTestTickets(100, true);
-  }
-  renderFinalistList();
-  populateSelects();
-  updateClosedUI();
-  refreshStats();
-  renderAllTickets();
+async function init() {
+  try {
+    const rows = await sbGet('config', 'select=key,value');
+    const cfg = Object.fromEntries(rows.map(r => [r.key, r.value]));
+    betsClosed = cfg.bets_closed === 'true';
+    document.getElementById('closedBanner').style.display = betsClosed ? 'block' : 'none';
+    document.getElementById('submitBtn').disabled = betsClosed;
+  } catch(e) {}
+  try { finalists = await sbGet('finalistes', 'order=cat,chien'); } catch(e) {}
   renderFavoritesTrend();
-  renderPendingQueue();
-});
-
-// ===================== TABS =====================
-function switchTab(tabId, btn) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  btn.classList.add('active');
-  if (tabId === 'tabStand') { refreshStats(); renderAllTickets(); renderPendingQueue(); }
-  if (tabId === 'tabAdmin') { renderAllTickets(); }
-}
-
-// ===================== FINALISTS =====================
-function finalistLabel(f) {
-  return `${f.chien} · ${f.conducteur} (${f.cat})`;
-}
-
-function renderFinalistList() {
-  const el = document.getElementById('finalistList');
-  if (!finalists.length) { el.innerHTML = '<div style="color:var(--muted);font-size:0.9rem">Aucun finaliste encore ajouté.</div>'; return; }
-  el.innerHTML = finalists.map((f, i) =>
-    `<div class="finalist-item">
-      <span class="finalist-num">#${String(i+1).padStart(2,'0')}</span>
-      <div class="finalist-info">
-        <div class="finalist-name">${f.chien}</div>
-        <div class="finalist-dog">${f.conducteur} — <span style="color:var(--lime);font-size:0.78rem">${f.cat}</span></div>
-      </div>
-      <button class="btn-sm-red" onclick="removeFinalist(${f.id})">✕</button>
-    </div>`
-  ).join('');
-}
-
-function populateSelects() {
-  // Player picks: filtered by selected category
-  populateCategoryFilteredSelects(['pick1','pick2','pick3'], document.getElementById('categorySelect')?.value || '');
-  // Official picks: filtered by selected official category
-  populateCategoryFilteredSelects(['official1','official2','official3'], document.getElementById('officialCat')?.value || '');
-}
-
-function populateCategoryFilteredSelects(ids, cat) {
-  const list = cat ? finalists.filter(f => f.cat === cat) : [];
-  const opts = `<option value="">— Choisir un binôme —</option>` +
-    list.map(f => `<option value="${f.id}">${finalistLabel(f)}</option>`).join('');
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const val = el.value;
-    el.innerHTML = opts;
-    if ([...el.options].some(o => o.value === val)) el.value = val;
-  });
+  realtimeSubscribe('tickets', () => renderFavoritesTrend());
 }
 
 function onCategoryChange() {
   const cat = document.getElementById('categorySelect').value;
-  document.getElementById('pick1').value = '';
-  document.getElementById('pick2').value = '';
-  document.getElementById('pick3').value = '';
-  populateCategoryFilteredSelects(['pick1','pick2','pick3'], cat);
+  const list = cat ? finalists.filter(f => f.cat === cat) : [];
+  const opts = '<option value="">— Choisir un binôme —</option>' + list.map(f => `<option value="${f.id}">${f.chien} · ${f.conducteur}</option>`).join('');
+  ['pick1','pick2','pick3'].forEach(id => { document.getElementById(id).innerHTML = opts; document.getElementById(id).value = ''; });
   document.getElementById('podiumCard').style.display = cat ? 'block' : 'none';
   document.getElementById('podiumCardCat').textContent = cat ? `Catégorie ${cat} — ${SIZE_LABELS[cat]}` : '';
   syncSelects();
 }
 
-function onOfficialCatChange() {
-  const cat = document.getElementById('officialCat').value;
-  document.getElementById('official1').value = '';
-  document.getElementById('official2').value = '';
-  document.getElementById('official3').value = '';
-  populateCategoryFilteredSelects(['official1','official2','official3'], cat);
-  document.getElementById('officialPodiumFields').style.display = cat ? 'block' : 'none';
-  document.getElementById('resultsSection').style.display = 'none';
-}
-
-function addFinalist() {
-  const c = document.getElementById('newConducteur').value.trim();
-  const d = document.getElementById('newChien').value.trim();
-  const cat = document.getElementById('newCat').value;
-  if (!c || !d) { showToast('Remplis le conducteur et le chien !'); return; }
-  const id = Date.now();
-  finalists.push({ id, conducteur: c, chien: d, cat });
-  saveFinalists(finalists);
-  document.getElementById('newConducteur').value = '';
-  document.getElementById('newChien').value = '';
-  renderFinalistList();
-  populateSelects();
-  renderFavoritesTrend();
-  showToast(`${d} ajouté(e) ✅`);
-}
-
-function removeFinalist(id) {
-  finalists = finalists.filter(f => f.id !== id);
-  saveFinalists(finalists);
-  renderFinalistList();
-  populateSelects();
-  renderFavoritesTrend();
-}
-
-// ===================== SELECT SYNC (anti-duplicate) =====================
 function syncSelects() {
-  const v1 = document.getElementById('pick1').value;
-  const v2 = document.getElementById('pick2').value;
-  const v3 = document.getElementById('pick3').value;
-
-  ['pick1','pick2','pick3'].forEach(id => {
+  const v = ['pick1','pick2','pick3'].map(id => document.getElementById(id).value);
+  ['pick1','pick2','pick3'].forEach((id, i) => {
     const sel = document.getElementById(id);
-    Array.from(sel.options).forEach(opt => {
-      if (!opt.value) { opt.disabled = false; return; }
-      const others = (id === 'pick1') ? [v2, v3] : (id === 'pick2') ? [v1, v3] : [v1, v2];
-      opt.disabled = others.includes(opt.value) && opt.value !== sel.value;
-    });
+    const others = v.filter((_, j) => j !== i);
+    Array.from(sel.options).forEach(opt => { opt.disabled = !!opt.value && others.includes(opt.value) && opt.value !== sel.value; });
   });
 }
 
-// ===================== BET SUBMISSION =====================
-function submitBet() {
-  if (isBetsClosed()) {
-    const err = document.getElementById('playerFormError');
-    err.style.display = 'block';
-    err.textContent = '⛔ Les paris sont clôturés. Aucune nouvelle inscription n\'est possible.';
-    return;
-  }
-
+async function submitBet() {
+  if (betsClosed) { showError('⛔ Les paris sont clôturés.'); return; }
   const prenom = document.getElementById('playerPrenom').value.trim();
   const nom    = document.getElementById('playerNom').value.trim();
   const tel    = document.getElementById('playerTel').value.trim();
@@ -1089,522 +125,70 @@ function submitBet() {
   const p1     = document.getElementById('pick1').value;
   const p2     = document.getElementById('pick2').value;
   const p3     = document.getElementById('pick3').value;
-  const err    = document.getElementById('playerFormError');
-
-  if (!prenom || !nom || !tel) { err.style.display='block'; err.textContent='⚠️ Remplis ton Prénom, Nom et Téléphone.'; return; }
-  if (!cat)                    { err.style.display='block'; err.textContent='⚠️ Choisis d\'abord la catégorie de l\'épreuve.'; return; }
-  if (!p1 || !p2 || !p3)      { err.style.display='block'; err.textContent='⚠️ Sélectionne les 3 positions du podium.'; return; }
-  if (p1===p2||p1===p3||p2===p3) { err.style.display='block'; err.textContent='⚠️ Un même binôme ne peut pas occuper deux places !'; return; }
-  err.style.display = 'none';
-
-  const ticketNum = 'VBC-' + String(tickets.length + 1).padStart(5, '0');
-  const ticket = {
-    id: ticketNum,
-    prenom, nom, tel,
-    cat,
-    picks: [parseInt(p1), parseInt(p2), parseInt(p3)],
-    status: 'pending',
-    createdAt: new Date().toISOString()
-  };
-  tickets.push(ticket);
-  saveTickets(tickets);
-  document.getElementById('trendCatFilter').value = cat;
-  renderFavoritesTrend();
-  renderPendingQueue();
-  currentTicketId = ticketNum;
-  showTicket(ticket);
-}
-
-function showTicket(ticket) {
-  document.getElementById('playerFormSection').style.display = 'none';
-  document.getElementById('ticketSection').style.display = 'block';
-
-  document.getElementById('tktNum').textContent = ticket.id;
-  document.getElementById('tktPlayer').textContent = `${ticket.prenom} ${ticket.nom.toUpperCase()}`;
-
-  const badge = document.getElementById('tktStatusBadge');
-  if (ticket.status === 'paid') {
-    badge.textContent = '✅ Payé';
-    badge.className = 'status-badge status-paid';
-    document.getElementById('paymentAlert').style.display = 'none';
-  } else {
-    badge.textContent = '⏳ En attente';
-    badge.className = 'status-badge status-pending';
-    document.getElementById('paymentAlert').style.display = 'block';
+  if (!prenom || !nom || !tel) { showError('⚠️ Remplis ton Prénom, Nom et Téléphone.'); return; }
+  if (!cat)    { showError('⚠️ Choisis la catégorie de l\'épreuve.'); return; }
+  if (!p1||!p2||!p3) { showError('⚠️ Sélectionne les 3 positions du podium.'); return; }
+  if (p1===p2||p1===p3||p2===p3) { showError('⚠️ Un même binôme ne peut pas occuper deux places !'); return; }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Envoi…'; hideError();
+  try {
+    const ticketId = 'VBC-' + Date.now().toString(36).toUpperCase();
+    await sbPost('tickets', { id: ticketId, prenom, nom, tel, cat, pick1: parseInt(p1), pick2: parseInt(p2), pick3: parseInt(p3), status: 'pending' });
+    document.getElementById('tktNum').textContent = ticketId;
+    document.getElementById('tktPlayer').textContent = `${prenom} ${nom.toUpperCase()}`;
+    const catHtml = `<div style="margin-bottom:8px"><span class="podium-cat">Catégorie ${cat} — ${SIZE_LABELS[cat]}</span></div>`;
+    document.getElementById('tktPodium').innerHTML = catHtml + renderPodiumLines([parseInt(p1),parseInt(p2),parseInt(p3)], finalists);
+    drawQR('qrCanvas', ticketId);
+    document.getElementById('playerFormSection').style.display = 'none';
+    document.getElementById('ticketSection').style.display = 'block';
+    document.getElementById('trendCatFilter').value = cat;
+    renderFavoritesTrend();
+  } catch(e) {
+    showError('❌ Erreur lors de l\'envoi. Réessaie.');
+    btn.disabled = false; btn.textContent = '🎯 Valider mon pari — 2 €';
   }
-
-  const catHtml = ticket.cat ? `<div style="margin-bottom:8px"><span class="podium-cat" style="font-size:0.8rem">Catégorie ${ticket.cat} — ${SIZE_LABELS[ticket.cat]}</span></div>` : '';
-  document.getElementById('tktPodium').innerHTML = catHtml + renderPodiumLines(ticket.picks);
-  drawQR('qrCanvas', ticket.id);
 }
 
 function newBet() {
   document.getElementById('playerFormSection').style.display = 'block';
   document.getElementById('ticketSection').style.display = 'none';
-  document.getElementById('playerPrenom').value = '';
-  document.getElementById('playerNom').value = '';
-  document.getElementById('playerTel').value = '';
+  ['playerPrenom','playerNom','playerTel'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('categorySelect').value = '';
-  document.getElementById('pick1').value = '';
-  document.getElementById('pick2').value = '';
-  document.getElementById('pick3').value = '';
   document.getElementById('podiumCard').style.display = 'none';
-  document.getElementById('playerFormError').style.display = 'none';
-  populateCategoryFilteredSelects(['pick1','pick2','pick3'], '');
+  document.getElementById('submitBtn').disabled = betsClosed;
+  document.getElementById('submitBtn').textContent = '🎯 Valider mon pari — 2 €';
+  ['pick1','pick2','pick3'].forEach(id => document.getElementById(id).innerHTML = '<option value="">— Choisir un binôme —</option>');
+  hideError();
 }
 
-// ===================== PODIUM RENDER =====================
-const MEDALS = ['🥇','🥈','🥉'];
-function renderPodiumLines(picks) {
-  return picks.map((pid, i) => {
-    const f = finalists.find(x => x.id === pid);
-    if (!f) return '';
-    return `<div class="podium-line">
-      <span class="medal">${MEDALS[i]}</span>
-      <span class="podium-name"><strong>${f.chien}</strong> · ${f.conducteur}</span>
-      <span class="podium-cat">${f.cat}</span>
-    </div>`;
-  }).join('');
-}
-
-// ===================== QR CODE (canvas draw) =====================
-function drawQR(canvasId, text) {
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext('2d');
-  const size = 130;
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, size, size);
-
-  // Deterministic pseudo-QR from text hash
-  const hash = [...text].reduce((a,c) => ((a<<5)-a)+c.charCodeAt(0)|0, 0);
-  const cells = 15;
-  const cell = Math.floor(size / cells);
-
-  ctx.fillStyle = '#000';
-
-  // Finder patterns
-  const drawFinder = (ox, oy) => {
-    ctx.fillRect(ox, oy, cell*7, cell*7);
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(ox+cell, oy+cell, cell*5, cell*5);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(ox+cell*2, oy+cell*2, cell*3, cell*3);
-    ctx.fillStyle = '#000';
-  };
-  drawFinder(0, 0);
-  drawFinder((cells-7)*cell, 0);
-  drawFinder(0, (cells-7)*cell);
-
-  // Data area
-  let seed = Math.abs(hash);
-  for (let r = 0; r < cells; r++) {
-    for (let c = 0; c < cells; c++) {
-      const inFinder = (r<8&&c<8)||(r<8&&c>=cells-8)||(r>=cells-8&&c<8);
-      if (inFinder) continue;
-      seed = (seed * 1664525 + 1013904223) & 0x7fffffff;
-      if (seed % 2 === 0) {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(c*cell, r*cell, cell, cell);
-      }
-    }
-  }
-
-  // Ticket text
-  ctx.fillStyle = '#99cc33';
-  ctx.font = `bold 8px monospace`;
-  ctx.textAlign = 'center';
-  ctx.fillText(text, size/2, size - 3);
-}
-
-// ===================== STAND / PAYMENT =====================
-function searchTicket() {
-  const raw = document.getElementById('searchInput').value.trim();
-  const query = raw.toUpperCase();
-  const noRes = document.getElementById('standNoResult');
-  const res   = document.getElementById('standTicketResult');
-  if (!query) { noRes.style.display='none'; res.style.display='none'; return; }
-
-  const t = tickets.find(t =>
-    t.id.toUpperCase() === query ||
-    t.id.replace('VBC-','') === query ||
-    `${t.prenom} ${t.nom}`.toUpperCase().includes(query) ||
-    t.nom.toUpperCase().includes(query) ||
-    t.prenom.toUpperCase().includes(query)
-  );
-  if (!t) {
-    noRes.style.display='block';
-    res.style.display='none';
-    standCurrentTicket = null;
-    return;
-  }
-  noRes.style.display='none';
-  standCurrentTicket = t;
-  renderStandTicket(t);
-  res.style.display='block';
-}
-
-function selectFromQueue(ticketId) {
-  const t = tickets.find(t => t.id === ticketId);
-  if (!t) return;
-  document.getElementById('searchInput').value = '';
-  document.getElementById('standNoResult').style.display = 'none';
-  standCurrentTicket = t;
-  renderStandTicket(t);
-  document.getElementById('standTicketResult').style.display = 'block';
-  document.getElementById('standTicketResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function renderPendingQueue() {
-  const el = document.getElementById('pendingQueueList');
-  if (!el) return;
-  const filterCat = document.getElementById('queueCatFilter')?.value || '';
-
-  let pending = tickets.filter(t => t.status !== 'paid');
-  if (filterCat) pending = pending.filter(t => t.cat === filterCat);
-
-  if (!pending.length) {
-    el.innerHTML = '<div class="queue-empty">✅ Tout est payé !</div>';
-    return;
-  }
-
-  el.innerHTML = pending.map(t => `
-    <div class="queue-item" onclick="selectFromQueue('${t.id}')">
-      <div class="queue-cat-tag">${t.cat || '?'}</div>
-      <div class="queue-info">
-        <div class="queue-name">${t.prenom} ${t.nom}</div>
-        <div class="queue-num">${t.id}</div>
-      </div>
-      <div class="queue-arrow">›</div>
-    </div>
-  `).join('');
-}
-
-function renderStandTicket(t) {
-  document.getElementById('standTktNum').textContent = t.id;
-  document.getElementById('standTktPlayer').textContent = `${t.prenom} ${t.nom.toUpperCase()}`;
-  const catHtml = t.cat ? `<div style="margin-bottom:8px"><span class="podium-cat" style="font-size:0.8rem">Catégorie ${t.cat} — ${SIZE_LABELS[t.cat]}</span></div>` : '';
-  document.getElementById('standTktPodium').innerHTML = catHtml + renderPodiumLines(t.picks);
-
-  const badge = document.getElementById('standTktStatusBadge');
-  const payBtn = document.getElementById('standPayBtn');
-  const alreadyPaid = document.getElementById('standAlreadyPaid');
-
-  if (t.status === 'paid') {
-    badge.textContent = '✅ Payé';
-    badge.className = 'status-badge status-paid';
-    payBtn.style.display = 'none';
-    alreadyPaid.style.display = 'block';
-  } else {
-    badge.textContent = '⏳ En attente';
-    badge.className = 'status-badge status-pending';
-    payBtn.style.display = 'block';
-    alreadyPaid.style.display = 'none';
-  }
-}
-
-function validatePayment() {
-  if (!standCurrentTicket) return;
-  const idx = tickets.findIndex(t => t.id === standCurrentTicket.id);
-  if (idx === -1) return;
-  tickets[idx].status = 'paid';
-  standCurrentTicket = tickets[idx];
-  saveTickets(tickets);
-  renderStandTicket(standCurrentTicket);
-  refreshStats();
-  renderFavoritesTrend();
-  renderPendingQueue();
-  showToast('Paiement validé ✅');
-
-  // Also update joueur tab if same ticket
-  if (currentTicketId === standCurrentTicket.id) {
-    showTicket(standCurrentTicket);
-  }
-}
-
-function refreshStats() {
-  const total   = tickets.length;
-  const paid    = tickets.filter(t => t.status === 'paid').length;
-  const pending = total - paid;
-  document.getElementById('statTotal').textContent   = total;
-  document.getElementById('statPaid').textContent    = paid;
-  document.getElementById('statPending').textContent = pending;
-}
-
-// ===================== FAVORIS PONDÉRÉS =====================
-const PODIUM_WEIGHTS = [3, 2, 1]; // 1er = 3pts, 2ème = 2pts, 3ème = 1pt
-
-function renderFavoritesTrend() {
-  const listEl = document.getElementById('favoritesTrendList');
-  const filterEl = document.getElementById('trendCatFilter');
-  if (!listEl || !filterEl) return;
-
-  const cat = filterEl.value || 'S';
-
-  // Points accumulés par chien (uniquement les finalistes de la catégorie choisie)
-  const dogsInCat = finalists.filter(f => f.cat === cat);
-  const pointsByDog = {};
-  dogsInCat.forEach(f => { pointsByDog[f.id] = 0; });
-
-  let totalPoints = 0;
-  tickets.forEach(t => {
-    if (t.cat !== cat) return;
-    t.picks.forEach((dogId, i) => {
-      if (pointsByDog.hasOwnProperty(dogId)) {
-        pointsByDog[dogId] += PODIUM_WEIGHTS[i];
-        totalPoints += PODIUM_WEIGHTS[i];
-      }
-    });
-  });
-
-  if (!dogsInCat.length) {
-    listEl.innerHTML = '<div style="color:var(--muted);font-size:0.9rem">Aucun finaliste dans cette catégorie.</div>';
-    return;
-  }
-  if (totalPoints === 0) {
-    listEl.innerHTML = '<div style="color:var(--muted);font-size:0.9rem">Pas encore de pronostics enregistrés pour cette catégorie.</div>';
-    return;
-  }
-
-  // Indice = totalPoints / pointsDuChien -> plus bas = plus favori
-  // Les chiens sans aucun point n'ont pas d'indice défini (division par 0) : on les classe en dernier
-  const ranked = dogsInCat.map(f => {
-    const pts = pointsByDog[f.id];
-    const indice = pts > 0 ? (totalPoints / pts) : Infinity;
-    return { ...f, pts, indice };
-  }).sort((a, b) => a.indice - b.indice);
-
-  const top3 = ranked.slice(0, 3);
-  const maxPts = Math.max(...ranked.map(d => d.pts), 1);
-
-  listEl.innerHTML = top3.map((f, i) => {
-    const indiceDisplay = f.pts > 0 ? f.indice.toFixed(2) : '—';
-    const barPct = Math.round((f.pts / maxPts) * 100);
-    return `<div class="trend-item ${i===0?'rank-1':''}">
+async function renderFavoritesTrend() {
+  const cat = document.getElementById('trendCatFilter').value || 'S';
+  const el = document.getElementById('favoritesTrendList');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const allTickets = await sbGet('tickets', `cat=eq.${cat}&select=pick1,pick2,pick3`);
+    const dogs = finalists.filter(f => f.cat === cat);
+    const pts = {}; dogs.forEach(f => { pts[f.id] = 0; });
+    let total = 0;
+    allTickets.forEach(t => { [t.pick1,t.pick2,t.pick3].forEach((id,i) => { if(id&&pts.hasOwnProperty(id)){pts[id]+=PODIUM_W[i];total+=PODIUM_W[i];} }); });
+    if (!dogs.length || total === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:.9rem">Pas encore de pronostics pour cette catégorie.</div>'; return; }
+    const maxPts = Math.max(...Object.values(pts), 1);
+    const ranked = dogs.map(f => ({...f, pts:pts[f.id], indice:pts[f.id]>0?total/pts[f.id]:Infinity})).sort((a,b)=>a.indice-b.indice).slice(0,3);
+    el.innerHTML = ranked.map((f,i) => `<div class="trend-item ${i===0?'rank-1':''}">
       <div class="trend-rank">${MEDALS[i]}</div>
       <div class="trend-info">
         <div class="trend-name">${f.chien}</div>
         <div class="trend-handler">${f.conducteur} · ${f.pts} pt${f.pts>1?'s':''}</div>
-        <div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${barPct}%"></div></div>
+        <div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.round(f.pts/maxPts*100)}%"></div></div>
       </div>
-      <div class="trend-index">${indiceDisplay}</div>
-    </div>`;
-  }).join('');
+      <div class="trend-index">${f.pts>0?f.indice.toFixed(2):'—'}</div>
+    </div>`).join('');
+  } catch(e) { el.innerHTML = '<div class="alert alert-red">Erreur chargement tendances.</div>'; }
 }
 
-// ===================== ADMIN =====================
-function adminLogin() {
-  const pwd = document.getElementById('adminPwd').value;
-  if (pwd === ADMIN_PWD) {
-    document.getElementById('adminLoginSection').style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'block';
-    renderFinalistList();
-    populateSelects();
-    renderAllTickets();
-  } else {
-    document.getElementById('adminLoginError').style.display = 'block';
-  }
-}
-
-function toggleBets() {
-  const closed = !isBetsClosed();
-  setBetsClosed(closed);
-  updateClosedUI();
-}
-
-function updateClosedUI() {
-  const closed = isBetsClosed();
-  document.getElementById('closedBanner').style.display = closed ? 'block' : 'none';
-  document.getElementById('betsOpenMsg').style.display  = closed ? 'none' : 'block';
-  document.getElementById('betsClosedMsg').style.display = closed ? 'block' : 'none';
-  const btn = document.getElementById('btnToggleBets');
-  if (btn) {
-    btn.textContent = closed ? '✅ Rouvrir les paris' : '⛔ Clôturer les paris';
-    btn.className   = closed ? 'btn-lime' : 'btn-red';
-  }
-}
-
-function calculateWinners() {
-  const o1 = parseInt(document.getElementById('official1').value);
-  const o2 = parseInt(document.getElementById('official2').value);
-  const o3 = parseInt(document.getElementById('official3').value);
-
-  const resSection = document.getElementById('resultsSection');
-  const resContent = document.getElementById('resultsContent');
-  resSection.style.display = 'block';
-
-  if (!o1 || !o2 || !o3) {
-    resContent.innerHTML = '<div class="alert alert-red">⚠️ Sélectionne les 3 positions du podium officiel.</div>';
-    return;
-  }
-  if (o1===o2||o1===o3||o2===o3) {
-    resContent.innerHTML = '<div class="alert alert-red">⚠️ Un même binôme ne peut pas figurer deux fois dans le podium.</div>';
-    return;
-  }
-
-  const cat = document.getElementById('officialCat').value;
-  if (!cat) {
-    resContent.innerHTML = '<div class="alert alert-red">⚠️ Sélectionne d\'abord la catégorie de l\'épreuve.</div>';
-    return;
-  }
-
-  const paidTickets = tickets.filter(t => t.status === 'paid' && t.cat === cat);
-  if (!paidTickets.length) {
-    resContent.innerHTML = `<div class="alert alert-yellow">⚠️ Aucun ticket payé enregistré pour la catégorie ${cat}.</div>`; return;
-  }
-
-  // Top 3 exact
-  const exactWinners = paidTickets.filter(t =>
-    t.picks[0] === o1 && t.picks[1] === o2 && t.picks[2] === o3
-  );
-
-  const f1 = finalists.find(f=>f.id===o1);
-  const f2 = finalists.find(f=>f.id===o2);
-  const f3 = finalists.find(f=>f.id===o3);
-
-  let html = `<div style="background:#1a1a1a;border-radius:8px;padding:12px;margin-bottom:14px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px">Podium officiel</div>
-    <div class="podium-line">🥇 <strong>${f1?.chien}</strong> · ${f1?.conducteur}</div>
-    <div class="podium-line">🥈 <strong>${f2?.chien}</strong> · ${f2?.conducteur}</div>
-    <div class="podium-line">🥉 <strong>${f3?.chien}</strong> · ${f3?.conducteur}</div>
-  </div>`;
-
-  if (exactWinners.length) {
-    html += `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:var(--lime);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em">🏆 Top 3 Exact — ${exactWinners.length} gagnant(s)</div>`;
-    html += exactWinners.map(t =>
-      `<div class="result-winner">
-        <div class="result-winner-name">🎉 ${t.prenom} ${t.nom.toUpperCase()}</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:0.8rem;color:var(--muted)">${t.id} · ${t.tel}</div>
-      </div>`
-    ).join('');
-  } else {
-    // Top 2 exact fallback (1er ET 2ème corrects, quelle que soit la 3ème)
-    const top2Winners = paidTickets.filter(t =>
-      t.picks[0] === o1 && t.picks[1] === o2
-    );
-
-    html += `<div class="alert alert-yellow" style="margin-bottom:12px">Aucun ticket avec le Top 3 exact. Recherche du <strong>Top 2 exact</strong> (🥇 et 🥈 corrects)…</div>`;
-
-    if (top2Winners.length) {
-      html += `<div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:#f90;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.08em">🥈 Top 2 Exact — ${top2Winners.length} proche(s)</div>`;
-      html += top2Winners.map(t =>
-        `<div class="result-close">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;color:#f90">🎯 ${t.prenom} ${t.nom.toUpperCase()}</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:0.8rem;color:var(--muted)">${t.id} · ${t.tel}</div>
-        </div>`
-      ).join('');
-    } else {
-      html += `<div class="alert alert-red">😔 Aucun ticket n'a le Top 2 exact non plus. Personne ne gagne ce tour.</div>`;
-    }
-  }
-
-  resContent.innerHTML = html;
-  resSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function renderAllTickets() {
-  const el = document.getElementById('allTicketsList');
-  if (!el) return;
-
-  const statsEl = document.getElementById('adminStatsRow');
-  if (statsEl) {
-    const total = tickets.length;
-    const paid = tickets.filter(t=>t.status==='paid').length;
-    statsEl.innerHTML = `
-      <div class="stat-pill"><span class="num">${total}</span> tickets</div>
-      <div class="stat-pill"><span class="num">${paid}</span> payés</div>
-      <div class="stat-pill"><span class="num">${total-paid}</span> en attente</div>
-    `;
-  }
-
-  const filterCat = document.getElementById('ticketsFilterCat')?.value || '';
-  const list = filterCat ? tickets.filter(t => t.cat === filterCat) : tickets;
-
-  if (!list.length) { el.innerHTML = '<div style="color:var(--muted);font-size:0.9rem">Aucun ticket enregistré.</div>'; return; }
-  el.innerHTML = list.map(t => {
-    const paid = t.status === 'paid';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="font-family:'Share Tech Mono',monospace;font-size:0.75rem;color:var(--lime);min-width:80px">${t.id}</span>
-      <span class="podium-cat" style="min-width:20px;text-align:center">${t.cat || '—'}</span>
-      <span style="flex:1;font-size:0.88rem">${t.prenom} ${t.nom}</span>
-      <span class="status-badge ${paid?'status-paid':'status-pending'}" style="margin-top:0">${paid?'✅ Payé':'⏳ Att.'}</span>
-    </div>`;
-  }).join('');
-}
-
-// ===================== TEST DATA GENERATOR =====================
-function generateTestTickets(count, silent) {
-  if (!finalists.length) { showToast('Ajoute d\'abord des finalistes !'); return; }
-
-  // Need at least 3 finalists per category to generate valid podiums for that category
-  const byCat = { S: [], M: [], I: [], L: [] };
-  finalists.forEach(f => { if (byCat[f.cat]) byCat[f.cat].push(f); });
-  const eligibleCats = Object.keys(byCat).filter(c => byCat[c].length >= 3);
-
-  if (!eligibleCats.length) {
-    if (!silent) showToast('Il faut au moins 3 finalistes dans une même catégorie.');
-    return;
-  }
-
-  let nextNum = tickets.length + 1;
-  const generated = [];
-
-  for (let i = 0; i < count; i++) {
-    const cat = pick(eligibleCats);
-    const pool = [...byCat[cat]];
-    // pick 3 distinct finalists from this category
-    const shuffled = shuffle(pool);
-    const picks = shuffled.slice(0, 3).map(f => f.id);
-
-    const ticketNum = 'VBC-' + String(nextNum++).padStart(5, '0');
-    generated.push({
-      id: ticketNum,
-      prenom: pick(TEST_PRENOMS),
-      nom: pick(TEST_NOMS),
-      tel: `06${randInt(10000000,99999999)}`,
-      cat,
-      picks,
-      status: Math.random() < 0.75 ? 'paid' : 'pending',
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  tickets = tickets.concat(generated);
-  saveTickets(tickets);
-  renderAllTickets();
-  refreshStats();
-  renderFavoritesTrend();
-  renderPendingQueue();
-  if (!silent) showToast(`${count} tickets de test générés ✅`);
-}
-
-function clearAllTickets() {
-  if (!confirm('Supprimer définitivement tous les tickets ?')) return;
-  tickets = [];
-  saveTickets(tickets);
-  renderAllTickets();
-  refreshStats();
-  renderFavoritesTrend();
-  renderPendingQueue();
-  showToast('Tous les tickets ont été supprimés 🗑️');
-}
-
-
-// ===================== LYDIA MODAL =====================
-function showLydiaModal() { document.getElementById('lydiaModal').style.display='flex'; }
-function closeLydiaModal() { document.getElementById('lydiaModal').style.display='none'; }
-function simulateLydia() {
-  closeLydiaModal();
-  showToast('Paiement Lydia simulé ! Merci 💜');
-  // Mark as note waiting for stand validation (simulate only)
-}
-
-// ===================== TOAST =====================
-function showToast(msg, duration=2500) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
-}
+function showError(msg) { const e=document.getElementById('playerFormError'); e.style.display='block'; e.textContent=msg; }
+function hideError() { document.getElementById('playerFormError').style.display='none'; }
+init();
 </script>
 </body>
 </html>

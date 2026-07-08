@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Very Breizh Cup — Stand paiement</title>
+<link rel="stylesheet" href="js/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">💳 Stand de paiement</span></div>
+  <span class="role-badge">Stand</span>
+</div>
+<div class="page">
+
+  <div class="card">
+    <div class="card-title">🔍 Rechercher un ticket</div>
+    <div class="search-wrap">
+      <span class="search-icon">🎫</span>
+      <input type="text" id="searchInput" class="field-input" placeholder="N° ticket ou nom du joueur" autocomplete="off" oninput="searchTicket()">
+    </div>
+  </div>
+
+  <div id="standNoResult" class="alert alert-red" style="display:none">❌ Aucun ticket trouvé.</div>
+
+  <div id="standTicketResult" style="display:none">
+    <div class="ticket">
+      <div class="ticket-header"><span>🐾 Very Breizh Cup</span><span id="standTktStatusBadge" class="status-badge"></span></div>
+      <div class="ticket-body">
+        <div class="ticket-num" id="standTktNum"></div>
+        <div class="ticket-player" id="standTktPlayer"></div>
+        <div class="ticket-dashed"></div>
+        <div id="standTktPodium"></div>
+      </div>
+    </div>
+    <div id="standPayBtn" style="margin-top:12px"><button class="btn-lime" onclick="validatePayment()">✅ Valider le paiement — 2 €</button></div>
+    <div id="standAlreadyPaid" class="alert alert-lime" style="display:none;margin-top:12px">✅ Ce ticket est déjà payé.</div>
+  </div>
+
+  <hr class="section-divider">
+  <div class="card">
+    <div class="card-title">📊 Statistiques</div>
+    <div class="stat-row">
+      <div class="stat-pill"><span class="num" id="statTotal">—</span> tickets</div>
+      <div class="stat-pill"><span class="num" id="statPaid">—</span> payés</div>
+      <div class="stat-pill"><span class="num" id="statPending">—</span> en attente</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⏳ Reste à payer</div>
+    <select id="queueCatFilter" class="field-select" onchange="renderPendingQueue()">
+      <option value="">Toutes les catégories</option>
+      <option value="S">S — Small</option><option value="M">M — Medium</option>
+      <option value="I">I — Intermediate</option><option value="L">L — Large</option>
+    </select>
+    <div id="pendingQueueList"><div class="spinner"></div></div>
+  </div>
+
+</div>
+<div id="toast"></div>
+<script src="js/supabase.js"></script>
+<script>
+let finalists = [], standCurrentTicket = null;
+
+async function init() {
+  try { finalists = await sbGet('finalistes', 'order=cat,chien'); } catch(e) {}
+  refreshStats();
+  renderPendingQueue();
+  realtimeSubscribe('tickets', () => { refreshStats(); renderPendingQueue(); });
+}
+
+async function searchTicket() {
+  const raw = document.getElementById('searchInput').value.trim();
+  if (!raw) { document.getElementById('standNoResult').style.display='none'; document.getElementById('standTicketResult').style.display='none'; return; }
+  try {
+    let results = await sbGet('tickets', `id=ilike.*${raw}*&limit=1`);
+    if (!results.length) results = await sbGet('tickets', `nom=ilike.*${raw}*&limit=1`);
+    if (!results.length) results = await sbGet('tickets', `prenom=ilike.*${raw}*&limit=1`);
+    if (!results.length) { document.getElementById('standNoResult').style.display='block'; document.getElementById('standTicketResult').style.display='none'; standCurrentTicket=null; return; }
+    standCurrentTicket = results[0];
+    document.getElementById('standNoResult').style.display='none';
+    renderStandTicket(standCurrentTicket);
+    document.getElementById('standTicketResult').style.display='block';
+  } catch(e) { showToast('Erreur recherche','red'); }
+}
+
+function selectFromQueue(ticketId) {
+  sbGet('tickets', `id=eq.${ticketId}&limit=1`).then(results => {
+    if (!results.length) return;
+    standCurrentTicket = results[0];
+    document.getElementById('searchInput').value = '';
+    document.getElementById('standNoResult').style.display='none';
+    renderStandTicket(standCurrentTicket);
+    document.getElementById('standTicketResult').style.display='block';
+    document.getElementById('standTicketResult').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+}
+
+function renderStandTicket(t) {
+  document.getElementById('standTktNum').textContent = t.id;
+  document.getElementById('standTktPlayer').textContent = `${t.prenom} ${t.nom.toUpperCase()}`;
+  const catHtml = t.cat ? `<div style="margin-bottom:8px"><span class="podium-cat">Catégorie ${t.cat} — ${SIZE_LABELS[t.cat]}</span></div>` : '';
+  document.getElementById('standTktPodium').innerHTML = catHtml + renderPodiumLines([t.pick1,t.pick2,t.pick3], finalists);
+  const paid = t.status === 'paid';
+  const badge = document.getElementById('standTktStatusBadge');
+  badge.textContent = paid ? '✅ Payé' : '⏳ En attente';
+  badge.className = 'status-badge ' + (paid ? 'status-paid' : 'status-pending');
+  document.getElementById('standPayBtn').style.display = paid ? 'none' : 'block';
+  document.getElementById('standAlreadyPaid').style.display = paid ? 'block' : 'none';
+}
+
+async function validatePayment() {
+  if (!standCurrentTicket) return;
+  try {
+    await sbPatch('tickets', `id=eq.${standCurrentTicket.id}`, { status: 'paid' });
+    standCurrentTicket.status = 'paid';
+    renderStandTicket(standCurrentTicket);
+    refreshStats();
+    renderPendingQueue();
+    showToast('Paiement validé ✅');
+  } catch(e) { showToast('Erreur validation','red'); }
+}
+
+async function refreshStats() {
+  try {
+    const all = await sbGet('tickets', 'select=status');
+    const paid = all.filter(t => t.status==='paid').length;
+    document.getElementById('statTotal').textContent = all.length;
+    document.getElementById('statPaid').textContent = paid;
+    document.getElementById('statPending').textContent = all.length - paid;
+  } catch(e) {}
+}
+
+async function renderPendingQueue() {
+  const el = document.getElementById('pendingQueueList');
+  const cat = document.getElementById('queueCatFilter').value;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    let params = 'status=eq.pending&order=created_at.asc&select=id,prenom,nom,cat';
+    if (cat) params += `&cat=eq.${cat}`;
+    const pending = await sbGet('tickets', params);
+    if (!pending.length) { el.innerHTML = '<div class="queue-empty">✅ Tout est payé !</div>'; return; }
+    el.innerHTML = pending.map(t => `
+      <div class="queue-item" onclick="selectFromQueue('${t.id}')">
+        <div class="queue-cat-tag">${t.cat||'?'}</div>
+        <div class="queue-info">
+          <div class="queue-name">${t.prenom} ${t.nom}</div>
+          <div class="queue-num">${t.id}</div>
+        </div>
+        <div class="queue-arrow">›</div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div class="alert alert-red">Erreur chargement.</div>'; }
+}
+
+init();
+</script>
+</body>
+</html>
