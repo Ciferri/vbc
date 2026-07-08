@@ -6,28 +6,18 @@
 <title>Very Breizh Cup — Résultats Live</title>
 <link rel="stylesheet" href="js/style.css">
 <style>
-  body { background: var(--black); }
-  .live-dot { width:10px; height:10px; background:var(--lime); border-radius:50%; display:inline-block; animation:pulse 1.4s ease-in-out infinite; margin-right:6px; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
-  .podium-display { display:flex; gap:8px; align-items:flex-end; justify-content:center; margin:16px 0; }
-  .podium-col { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; }
-  .podium-block { width:100%; border-radius:8px 8px 0 0; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.4rem; }
-  .podium-block.p1 { height:80px; background:var(--lime); color:var(--black); }
-  .podium-block.p2 { height:60px; background:#888; color:#fff; }
-  .podium-block.p3 { height:44px; background:#7a4f2b; color:#fff; }
-  .podium-label { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:.82rem; text-align:center; color:var(--light); line-height:1.2; }
-  .podium-sub { font-size:.72rem; color:var(--muted); }
-  .cat-tab { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:.85rem; text-transform:uppercase; letter-spacing:.08em; padding:7px 14px; border:1.5px solid var(--border); border-radius:6px; cursor:pointer; background:transparent; color:var(--muted); transition:all .2s; }
-  .cat-tab.active { background:var(--lime); color:var(--black); border-color:var(--lime); }
-  .cat-tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .live-label { display:flex; align-items:center; gap:6px; font-family:var(--font-display); font-weight:700; font-size:.72rem; text-transform:uppercase; letter-spacing:.15em; color:var(--lime-dark); }
 </style>
 </head>
 <body>
-<div class="app-header">
-  <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub"><span class="live-dot"></span>Résultats en direct</span></div>
-  <span class="role-badge">Public</span>
-</div>
-<div class="page">
+<header class="app-header">
+  <div class="header-logo">
+    <img src="js/logo.png" alt="Club Canin de Bourgbarré">
+    <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">Résultats en direct</span></div>
+  </div>
+  <div class="live-label"><span class="live-dot"></span>Live</div>
+</header>
+<main class="page">
 
   <div class="cat-tabs">
     <button class="cat-tab active" onclick="switchCat('S',this)">S</button>
@@ -37,18 +27,24 @@
   </div>
 
   <div class="card">
-    <div class="card-title" id="catTitle">🏆 Catégorie S — Small</div>
+    <div class="card-title" id="catTitle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 21V3M3 7l9-4 9 4v6a9 9 0 01-18 0V7z"/></svg>
+      Catégorie S — Small
+    </div>
     <div id="podiumVisual"></div>
     <div id="classementComplet"></div>
   </div>
 
   <div class="card">
-    <div class="card-title">🔥 Favoris du public — <span id="trendCatLabel">S</span></div>
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      Favoris du public — <span id="trendCatLabel">S</span>
+    </div>
     <div id="trendDisplay"><div class="spinner"></div></div>
-    <div style="font-size:.74rem;color:var(--muted);margin-top:8px;line-height:1.4">Basé sur l'ensemble des pronostics enregistrés.</div>
+    <p style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.5">Basé sur l'ensemble des pronostics enregistrés.</p>
   </div>
 
-</div>
+</main>
 <div id="toast"></div>
 <script src="js/supabase.js"></script>
 <script>
@@ -66,7 +62,7 @@ function switchCat(cat, btn) {
   currentCat = cat;
   document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('catTitle').textContent = `🏆 Catégorie ${cat} — ${SIZE_LABELS[cat]}`;
+  document.getElementById('catTitle').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 21V3M3 7l9-4 9 4v6a9 9 0 01-18 0V7z"/></svg> Catégorie ${cat} — ${SIZE_LABELS[cat]}`;
   document.getElementById('trendCatLabel').textContent = cat;
   renderAll();
 }
@@ -80,7 +76,7 @@ async function renderClassement() {
     const chronos = await sbGet('chronos', `cat=eq.${currentCat}&select=*`);
     const dogs = finalists.filter(f => f.cat === currentCat);
     if (!chronos.length) {
-      podEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;font-size:.9rem">En attente des résultats…</div>';
+      podEl.innerHTML = '<p style="color:var(--muted);text-align:center;padding:24px 0;font-size:.9rem">En attente des résultats…</p>';
       listEl.innerHTML = ''; return;
     }
     const rows = chronos.map(c => {
@@ -90,10 +86,10 @@ async function renderClassement() {
 
     const valid = rows.filter(r => !r.disqualifie);
     if (valid.length >= 1) {
-      const order = [valid[1], valid[0], valid[2]].filter(Boolean);
+      const display = [valid[1], valid[0], valid[2]].filter(Boolean);
       const classes = ['p2','p1','p3'];
-      const labels = ['🥈','🥇','🥉'];
-      podEl.innerHTML = `<div class="podium-display">${order.map((r,i) => `
+      const labels  = ['2','1','3'];
+      podEl.innerHTML = `<div class="podium-display">${display.map((r,i) => `
         <div class="podium-col">
           <div class="podium-label">${r.f?.chien||'?'}<br><span class="podium-sub">${r.f?.conducteur||''}</span></div>
           <div class="podium-block ${classes[i]}">${labels[i]}</div>
@@ -102,12 +98,12 @@ async function renderClassement() {
 
     listEl.innerHTML = rows.map((r,i) => `
       <div class="chrono-row">
-        <div class="chrono-pos ${r.disqualifie?'':''}">` + (r.disqualifie?'DQ':i+1) + `</div>
+        <div class="chrono-pos ${r.disqualifie?'chrono-dq':''}">${r.disqualifie?'DQ':i+1}</div>
         <div class="chrono-info">
           <div class="chrono-name ${r.disqualifie?'chrono-dq':''}">${r.f?.chien||'?'} · ${r.f?.conducteur||'?'}</div>
           <div class="chrono-detail">${r.disqualifie?'Disqualifié':`${r.penalites||0} pt(s) de pénalité`}</div>
         </div>
-        <div class="chrono-time ${r.disqualifie?'chrono-dq':''}">${r.disqualifie?'—':r.temps_sec?.toFixed(2)+'s'}</div>
+        <div class="chrono-time ${r.disqualifie?'chrono-dq':''}">${r.disqualifie?'—':(r.temps_sec?.toFixed(2)+'s')}</div>
       </div>`).join('');
   } catch(e) {}
 }
@@ -120,21 +116,20 @@ async function renderTrend() {
     const pts = {}; dogs.forEach(f => { pts[f.id]=0; });
     let total = 0;
     allTickets.forEach(t => { [t.pick1,t.pick2,t.pick3].forEach((id,i) => { if(id&&pts.hasOwnProperty(id)){pts[id]+=PODIUM_W[i];total+=PODIUM_W[i];} }); });
-    if (!dogs.length || total === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:.9rem">Pas encore de pronostics.</div>'; return; }
+    if (!dogs.length || total === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:.88rem">Pas encore de pronostics.</p>'; return; }
     const maxPts = Math.max(...Object.values(pts), 1);
     const ranked = dogs.map(f => ({...f, pts:pts[f.id], indice:pts[f.id]>0?total/pts[f.id]:Infinity})).sort((a,b)=>a.indice-b.indice).slice(0,3);
     el.innerHTML = ranked.map((f,i) => `<div class="trend-item ${i===0?'rank-1':''}">
-      <div class="trend-rank">${MEDALS[i]}</div>
+      <div class="trend-rank">${i+1}</div>
       <div class="trend-info">
         <div class="trend-name">${f.chien}</div>
-        <div class="trend-handler">${f.conducteur} · ${f.pts} pt${f.pts>1?'s':''}</div>
+        <div class="trend-handler">${f.conducteur} &middot; ${f.pts} pt${f.pts>1?'s':''}</div>
         <div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.round(f.pts/maxPts*100)}%"></div></div>
       </div>
       <div class="trend-index">${f.pts>0?f.indice.toFixed(2):'—'}</div>
     </div>`).join('');
   } catch(e) {}
 }
-
 init();
 </script>
 </body>

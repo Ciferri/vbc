@@ -1,5 +1,5 @@
 // ============================================================
-//  Very Breizh Cup — Couche Supabase partagée
+//  Very Breizh Cup — Couche Supabase + utilitaires communs
 // ============================================================
 const SUPABASE_URL  = 'https://zadctpscfibebpshaczw.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZGN0cHNjZmliZWJwc2hhY3p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1MzMwMDMsImV4cCI6MjA5OTEwOTAwM30.x7qh98X4Tzi9VTBiJz2rkzBagvE4KSlG3EJLyMGJSBM';
@@ -11,11 +11,12 @@ const HEADERS = {
   'Prefer': 'return=representation'
 };
 
-const SIZE_LABELS  = { S: 'Small', M: 'Medium', I: 'Intermediate', L: 'Large' };
-const MEDALS       = ['🥇','🥈','🥉'];
-const PODIUM_W     = [3, 2, 1];
+const SIZE_LABELS = { S: 'Small', M: 'Medium', I: 'Intermediate', L: 'Large' };
+const PODIUM_W    = [3, 2, 1];
+const MEDAL_LABELS = ['1', '2', '3'];
+const MEDAL_CLASSES = ['m1', 'm2', 'm3'];
 
-// ---- REST helpers ----
+// ── REST helpers ──
 async function sbGet(table, params = '') {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, { headers: HEADERS });
   if (!r.ok) throw new Error(await r.text());
@@ -42,29 +43,25 @@ async function sbDelete(table, params) {
   if (!r.ok) throw new Error(await r.text());
 }
 
-// ---- Realtime (WebSocket Supabase) ----
+// ── Realtime ──
 function realtimeSubscribe(table, callback) {
   const wsUrl = SUPABASE_URL.replace('https', 'wss') + '/realtime/v1/websocket?apikey=' + SUPABASE_ANON + '&vsn=1.0.0';
   const ws = new WebSocket(wsUrl);
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ topic: `realtime:public:${table}`, event: 'phx_join', payload: {}, ref: '1' }));
-  };
+  ws.onopen = () => ws.send(JSON.stringify({ topic: `realtime:public:${table}`, event: 'phx_join', payload: {}, ref: '1' }));
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-    if (msg.event === 'INSERT' || msg.event === 'UPDATE' || msg.event === 'DELETE') {
-      callback(msg.event, msg.payload?.record);
-    }
+    if (['INSERT','UPDATE','DELETE'].includes(msg.event)) callback(msg.event, msg.payload?.record);
   };
-  ws.onerror = () => console.warn('Realtime WS error');
+  ws.onerror = () => console.warn('Realtime WS error on', table);
   return ws;
 }
 
-// ---- UI helpers partagés ----
-function showToast(msg, color = 'lime', duration = 2800) {
-  let t = document.getElementById('toast');
+// ── UI helpers ──
+function showToast(msg, type = 'ok', duration = 2600) {
+  const t = document.getElementById('toast');
   if (!t) return;
   t.textContent = msg;
-  t.style.borderColor = color === 'red' ? 'var(--red)' : 'var(--lime)';
+  t.style.borderColor = type === 'err' ? 'var(--red)' : 'var(--lime)';
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), duration);
 }
@@ -74,9 +71,9 @@ function renderPodiumLines(picks, finalists) {
     const f = finalists.find(x => String(x.id) === String(pid));
     if (!f) return '';
     return `<div class="podium-line">
-      <span class="medal">${MEDALS[i]}</span>
-      <span class="podium-name"><strong>${f.chien}</strong> · ${f.conducteur}</span>
-      <span class="podium-cat">${f.cat}</span>
+      <span class="medal-icon ${MEDAL_CLASSES[i]}">${MEDAL_LABELS[i]}</span>
+      <span class="podium-name">${f.chien} &middot; ${f.conducteur}</span>
+      <span class="podium-cat-tag">${f.cat}</span>
     </div>`;
   }).join('');
 }
@@ -90,7 +87,6 @@ function drawQR(canvasId, text) {
   ctx.fillRect(0, 0, size, size);
   const hash = [...text].reduce((a, c) => ((a << 5) - a) + c.charCodeAt(0) | 0, 0);
   const cells = 15, cell = Math.floor(size / cells);
-  ctx.fillStyle = '#000';
   const drawFinder = (ox, oy) => {
     ctx.fillStyle = '#000'; ctx.fillRect(ox, oy, cell*7, cell*7);
     ctx.fillStyle = '#fff'; ctx.fillRect(ox+cell, oy+cell, cell*5, cell*5);
@@ -103,11 +99,11 @@ function drawQR(canvasId, text) {
       const inFinder = (r<8&&c<8)||(r<8&&c>=cells-8)||(r>=cells-8&&c<8);
       if (inFinder) continue;
       seed = (seed * 1664525 + 1013904223) & 0x7fffffff;
-      if (seed % 2 === 0) { ctx.fillStyle='#000'; ctx.fillRect(c*cell, r*cell, cell, cell); }
+      if (seed % 2 === 0) { ctx.fillStyle='#0F0F0F'; ctx.fillRect(c*cell, r*cell, cell, cell); }
     }
   }
-  ctx.fillStyle = '#99cc33';
-  ctx.font = 'bold 8px monospace';
+  ctx.fillStyle = '#8DC63F';
+  ctx.font = 'bold 7px monospace';
   ctx.textAlign = 'center';
   ctx.fillText(text, size/2, size - 3);
 }

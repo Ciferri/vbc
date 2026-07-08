@@ -8,25 +8,38 @@
 </head>
 <body>
 
-<div class="app-header">
-  <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">🐾 Le Top 3 — Pronostics</span></div>
+<header class="app-header">
+  <div class="header-logo">
+    <img src="js/logo.png" alt="Club Canin de Bourgbarré">
+    <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">Le Top 3 — Pronostics</span></div>
+  </div>
   <span class="role-badge">Joueur</span>
-</div>
-<div id="closedBanner" style="display:none;background:var(--red);color:#fff;text-align:center;padding:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase">⛔ Paris clôturés — Aucune nouvelle inscription</div>
+</header>
 
-<div class="page">
+<div id="closedBanner" class="closed-banner" style="display:none">Paris clôturés — Aucune nouvelle inscription</div>
+
+<main class="page">
+
+  <!-- FORMULAIRE -->
   <div id="playerFormSection">
     <div class="card">
-      <div class="card-title">🎫 Mon pronostic</div>
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+        Mon pronostic
+      </div>
       <label class="field-label">Prénom</label>
-      <input type="text" id="playerPrenom" class="field-input" placeholder="Ex : Marie" autocomplete="off">
+      <input type="text" id="playerPrenom" class="field-input" placeholder="Ex : Marie" autocomplete="given-name">
       <label class="field-label">Nom</label>
-      <input type="text" id="playerNom" class="field-input" placeholder="Ex : Dupont" autocomplete="off">
+      <input type="text" id="playerNom" class="field-input" placeholder="Ex : Dupont" autocomplete="family-name">
       <label class="field-label">Téléphone</label>
-      <input type="tel" id="playerTel" class="field-input" placeholder="Ex : 06 12 34 56 78" autocomplete="off">
+      <input type="tel" id="playerTel" class="field-input" placeholder="Ex : 06 12 34 56 78" autocomplete="tel" inputmode="tel">
     </div>
+
     <div class="card">
-      <div class="card-title">🏟️ Épreuve</div>
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Epreuve
+      </div>
       <label class="field-label">Catégorie sur laquelle parier</label>
       <select id="categorySelect" class="field-select" onchange="onCategoryChange()">
         <option value="">— Sélectionner une catégorie —</option>
@@ -36,48 +49,68 @@
         <option value="L">L — Large</option>
       </select>
     </div>
+
     <div class="card" id="podiumCard" style="display:none">
-      <div class="card-title">🏆 Mon Top 3 — <span id="podiumCardCat"></span></div>
-      <label class="field-label">🥇 1ère place</label>
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 21V3M3 7l9-4 9 4v6a9 9 0 01-18 0V7z"/></svg>
+        Mon Top 3 — <span id="podiumCardCat"></span>
+      </div>
+      <label class="field-label">1re place</label>
       <select id="pick1" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
-      <label class="field-label">🥈 2ème place</label>
+      <label class="field-label">2e place</label>
       <select id="pick2" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
-      <label class="field-label">🥉 3ème place</label>
+      <label class="field-label">3e place</label>
       <select id="pick3" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
     </div>
+
     <div id="playerFormError" class="alert alert-red" style="display:none"></div>
-    <button class="btn-lime" id="submitBtn" onclick="submitBet()">🎯 Valider mon pari — 2 €</button>
+    <button class="btn-primary" id="submitBtn" onclick="submitBet()">Valider mon pari — 2 €</button>
   </div>
 
+  <!-- TICKET -->
   <div id="ticketSection" style="display:none">
     <div class="ticket">
-      <div class="ticket-header"><span>🐾 Very Breizh Cup</span><span id="tktStatusBadge" class="status-badge status-pending">⏳ En attente</span></div>
+      <div class="ticket-header">
+        <span>Very Breizh Cup</span>
+        <span id="tktStatusBadge" class="badge badge-pending">En attente</span>
+      </div>
       <div class="ticket-body">
         <div class="ticket-num" id="tktNum"></div>
         <div class="ticket-player" id="tktPlayer"></div>
         <div class="ticket-dashed"></div>
         <div id="tktPodium"></div>
-        <div class="qr-wrapper"><div class="ticket-dashed"></div><canvas id="qrCanvas" width="130" height="130"></canvas>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:.7rem;color:var(--muted);margin-top:6px;letter-spacing:.08em;text-transform:uppercase">Scanner au stand de paiement</div></div>
+        <div class="qr-wrapper">
+          <div class="ticket-dashed"></div>
+          <canvas id="qrCanvas" width="130" height="130"></canvas>
+          <div class="qr-label">Scanner au stand de paiement</div>
+        </div>
       </div>
     </div>
-    <div class="alert alert-red" style="margin-top:12px">💳 Rendez-vous au stand pour valider votre paiement de <strong>2 €</strong></div>
-    <button class="btn-outline" onclick="newBet()" style="margin-top:8px">＋ Nouveau pari</button>
+    <div class="alert alert-red" style="margin-top:12px">Rendez-vous au stand pour valider votre paiement de <strong>2 €</strong></div>
+    <button class="btn-outline" onclick="newBet()">Nouveau pari</button>
   </div>
 
   <hr class="section-divider">
+
+  <!-- TENDANCES -->
   <div class="card">
-    <div class="card-title">🔥 Tendances / Favoris</div>
-    <label class="field-label">Filtrer par catégorie</label>
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      Tendances — Favoris du public
+    </div>
+    <label class="field-label">Catégorie</label>
     <select id="trendCatFilter" class="field-select" onchange="renderFavoritesTrend()">
-      <option value="S">S — Small</option><option value="M">M — Medium</option>
-      <option value="I">I — Intermediate</option><option value="L">L — Large</option>
+      <option value="S">S — Small</option>
+      <option value="M">M — Medium</option>
+      <option value="I">I — Intermediate</option>
+      <option value="L">L — Large</option>
     </select>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.08em;color:var(--lime);margin:4px 0 10px">🏆 Podium probable du public</div>
+    <div class="section-label" style="margin-top:4px">Podium probable</div>
     <div id="favoritesTrendList"><div class="spinner"></div></div>
-    <div style="font-size:.74rem;color:var(--muted);margin-top:10px;line-height:1.4">3 pts pour un 1er, 2 pts pour un 2ème, 1 pt pour un 3ème. Plus l'indice est bas, plus le binôme est favori.</div>
+    <p style="font-size:.72rem;color:var(--muted);margin-top:10px;line-height:1.5">Basé sur tous les pronostics enregistrés. 3 pts pour un 1er, 2 pts pour un 2e, 1 pt pour un 3e. Indice bas = favori du public.</p>
   </div>
-</div>
+
+</main>
 
 <div id="toast"></div>
 <script src="js/supabase.js"></script>
@@ -103,7 +136,7 @@ function onCategoryChange() {
   const opts = '<option value="">— Choisir un binôme —</option>' + list.map(f => `<option value="${f.id}">${f.chien} · ${f.conducteur}</option>`).join('');
   ['pick1','pick2','pick3'].forEach(id => { document.getElementById(id).innerHTML = opts; document.getElementById(id).value = ''; });
   document.getElementById('podiumCard').style.display = cat ? 'block' : 'none';
-  document.getElementById('podiumCardCat').textContent = cat ? `Catégorie ${cat} — ${SIZE_LABELS[cat]}` : '';
+  document.getElementById('podiumCardCat').textContent = cat ? `Cat. ${cat} — ${SIZE_LABELS[cat]}` : '';
   syncSelects();
 }
 
@@ -117,7 +150,7 @@ function syncSelects() {
 }
 
 async function submitBet() {
-  if (betsClosed) { showError('⛔ Les paris sont clôturés.'); return; }
+  if (betsClosed) { showError('Les paris sont clôturés.'); return; }
   const prenom = document.getElementById('playerPrenom').value.trim();
   const nom    = document.getElementById('playerNom').value.trim();
   const tel    = document.getElementById('playerTel').value.trim();
@@ -125,18 +158,18 @@ async function submitBet() {
   const p1     = document.getElementById('pick1').value;
   const p2     = document.getElementById('pick2').value;
   const p3     = document.getElementById('pick3').value;
-  if (!prenom || !nom || !tel) { showError('⚠️ Remplis ton Prénom, Nom et Téléphone.'); return; }
-  if (!cat)    { showError('⚠️ Choisis la catégorie de l\'épreuve.'); return; }
-  if (!p1||!p2||!p3) { showError('⚠️ Sélectionne les 3 positions du podium.'); return; }
-  if (p1===p2||p1===p3||p2===p3) { showError('⚠️ Un même binôme ne peut pas occuper deux places !'); return; }
+  if (!prenom || !nom || !tel) { showError('Remplis ton Prénom, Nom et Téléphone.'); return; }
+  if (!cat)    { showError('Choisis la catégorie de l\'épreuve.'); return; }
+  if (!p1||!p2||!p3) { showError('Sélectionne les 3 positions du podium.'); return; }
+  if (p1===p2||p1===p3||p2===p3) { showError('Un même binôme ne peut pas occuper deux places.'); return; }
   const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = 'Envoi…'; hideError();
+  btn.disabled = true; btn.textContent = 'Envoi en cours…'; hideError();
   try {
     const ticketId = 'VBC-' + Date.now().toString(36).toUpperCase();
     await sbPost('tickets', { id: ticketId, prenom, nom, tel, cat, pick1: parseInt(p1), pick2: parseInt(p2), pick3: parseInt(p3), status: 'pending' });
     document.getElementById('tktNum').textContent = ticketId;
     document.getElementById('tktPlayer').textContent = `${prenom} ${nom.toUpperCase()}`;
-    const catHtml = `<div style="margin-bottom:8px"><span class="podium-cat">Catégorie ${cat} — ${SIZE_LABELS[cat]}</span></div>`;
+    const catHtml = `<div style="margin-bottom:10px"><span class="podium-cat-tag">Catégorie ${cat} — ${SIZE_LABELS[cat]}</span></div>`;
     document.getElementById('tktPodium').innerHTML = catHtml + renderPodiumLines([parseInt(p1),parseInt(p2),parseInt(p3)], finalists);
     drawQR('qrCanvas', ticketId);
     document.getElementById('playerFormSection').style.display = 'none';
@@ -144,8 +177,8 @@ async function submitBet() {
     document.getElementById('trendCatFilter').value = cat;
     renderFavoritesTrend();
   } catch(e) {
-    showError('❌ Erreur lors de l\'envoi. Réessaie.');
-    btn.disabled = false; btn.textContent = '🎯 Valider mon pari — 2 €';
+    showError('Erreur lors de l\'envoi. Réessaie.');
+    btn.disabled = false; btn.textContent = 'Valider mon pari — 2 €';
   }
 }
 
@@ -155,8 +188,8 @@ function newBet() {
   ['playerPrenom','playerNom','playerTel'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('categorySelect').value = '';
   document.getElementById('podiumCard').style.display = 'none';
-  document.getElementById('submitBtn').disabled = betsClosed;
-  document.getElementById('submitBtn').textContent = '🎯 Valider mon pari — 2 €';
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = betsClosed; btn.textContent = 'Valider mon pari — 2 €';
   ['pick1','pick2','pick3'].forEach(id => document.getElementById(id).innerHTML = '<option value="">— Choisir un binôme —</option>');
   hideError();
 }
@@ -168,17 +201,17 @@ async function renderFavoritesTrend() {
   try {
     const allTickets = await sbGet('tickets', `cat=eq.${cat}&select=pick1,pick2,pick3`);
     const dogs = finalists.filter(f => f.cat === cat);
-    const pts = {}; dogs.forEach(f => { pts[f.id] = 0; });
+    const pts = {}; dogs.forEach(f => { pts[f.id]=0; });
     let total = 0;
     allTickets.forEach(t => { [t.pick1,t.pick2,t.pick3].forEach((id,i) => { if(id&&pts.hasOwnProperty(id)){pts[id]+=PODIUM_W[i];total+=PODIUM_W[i];} }); });
-    if (!dogs.length || total === 0) { el.innerHTML = '<div style="color:var(--muted);font-size:.9rem">Pas encore de pronostics pour cette catégorie.</div>'; return; }
+    if (!dogs.length || total === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:.88rem">Pas encore de pronostics pour cette catégorie.</p>'; return; }
     const maxPts = Math.max(...Object.values(pts), 1);
     const ranked = dogs.map(f => ({...f, pts:pts[f.id], indice:pts[f.id]>0?total/pts[f.id]:Infinity})).sort((a,b)=>a.indice-b.indice).slice(0,3);
     el.innerHTML = ranked.map((f,i) => `<div class="trend-item ${i===0?'rank-1':''}">
-      <div class="trend-rank">${MEDALS[i]}</div>
+      <div class="trend-rank">${i+1}</div>
       <div class="trend-info">
         <div class="trend-name">${f.chien}</div>
-        <div class="trend-handler">${f.conducteur} · ${f.pts} pt${f.pts>1?'s':''}</div>
+        <div class="trend-handler">${f.conducteur} &middot; ${f.pts} pt${f.pts>1?'s':''}</div>
         <div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.round(f.pts/maxPts*100)}%"></div></div>
       </div>
       <div class="trend-index">${f.pts>0?f.indice.toFixed(2):'—'}</div>

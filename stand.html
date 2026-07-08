@@ -7,25 +7,31 @@
 <link rel="stylesheet" href="js/style.css">
 </head>
 <body>
-<div class="app-header">
-  <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">💳 Stand de paiement</span></div>
+<header class="app-header">
+  <div class="header-logo">
+    <img src="js/logo.png" alt="Club Canin de Bourgbarré">
+    <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">Stand de paiement</span></div>
+  </div>
   <span class="role-badge">Stand</span>
-</div>
-<div class="page">
+</header>
+<main class="page">
 
   <div class="card">
-    <div class="card-title">🔍 Rechercher un ticket</div>
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Rechercher un ticket
+    </div>
     <div class="search-wrap">
-      <span class="search-icon">🎫</span>
-      <input type="text" id="searchInput" class="field-input" placeholder="N° ticket ou nom du joueur" autocomplete="off" oninput="searchTicket()">
+      <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+      <input type="text" id="searchInput" class="field-input" placeholder="Numéro de ticket ou nom du joueur" autocomplete="off" oninput="searchTicket()">
     </div>
   </div>
 
-  <div id="standNoResult" class="alert alert-red" style="display:none">❌ Aucun ticket trouvé.</div>
+  <div id="standNoResult" class="alert alert-red" style="display:none">Aucun ticket trouvé.</div>
 
   <div id="standTicketResult" style="display:none">
     <div class="ticket">
-      <div class="ticket-header"><span>🐾 Very Breizh Cup</span><span id="standTktStatusBadge" class="status-badge"></span></div>
+      <div class="ticket-header"><span>Very Breizh Cup</span><span id="standTktStatusBadge" class="badge"></span></div>
       <div class="ticket-body">
         <div class="ticket-num" id="standTktNum"></div>
         <div class="ticket-player" id="standTktPlayer"></div>
@@ -33,31 +39,40 @@
         <div id="standTktPodium"></div>
       </div>
     </div>
-    <div id="standPayBtn" style="margin-top:12px"><button class="btn-lime" onclick="validatePayment()">✅ Valider le paiement — 2 €</button></div>
-    <div id="standAlreadyPaid" class="alert alert-lime" style="display:none;margin-top:12px">✅ Ce ticket est déjà payé.</div>
+    <div id="standPayBtn" style="margin-top:12px"><button class="btn-primary" onclick="validatePayment()">Valider le paiement — 2 €</button></div>
+    <div id="standAlreadyPaid" class="alert alert-lime" style="display:none;margin-top:12px">Ce ticket est déjà payé.</div>
   </div>
 
   <hr class="section-divider">
+
   <div class="card">
-    <div class="card-title">📊 Statistiques</div>
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>
+      Statistiques
+    </div>
     <div class="stat-row">
-      <div class="stat-pill"><span class="num" id="statTotal">—</span> tickets</div>
-      <div class="stat-pill"><span class="num" id="statPaid">—</span> payés</div>
-      <div class="stat-pill"><span class="num" id="statPending">—</span> en attente</div>
+      <div class="stat-pill"><span class="num" id="statTotal">—</span>&nbsp;tickets</div>
+      <div class="stat-pill"><span class="num" id="statPaid">—</span>&nbsp;payés</div>
+      <div class="stat-pill"><span class="num" id="statPending">—</span>&nbsp;en attente</div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">⏳ Reste à payer</div>
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Reste à payer
+    </div>
     <select id="queueCatFilter" class="field-select" onchange="renderPendingQueue()">
       <option value="">Toutes les catégories</option>
-      <option value="S">S — Small</option><option value="M">M — Medium</option>
-      <option value="I">I — Intermediate</option><option value="L">L — Large</option>
+      <option value="S">S — Small</option>
+      <option value="M">M — Medium</option>
+      <option value="I">I — Intermediate</option>
+      <option value="L">L — Large</option>
     </select>
     <div id="pendingQueueList"><div class="spinner"></div></div>
   </div>
 
-</div>
+</main>
 <div id="toast"></div>
 <script src="js/supabase.js"></script>
 <script>
@@ -82,7 +97,7 @@ async function searchTicket() {
     document.getElementById('standNoResult').style.display='none';
     renderStandTicket(standCurrentTicket);
     document.getElementById('standTicketResult').style.display='block';
-  } catch(e) { showToast('Erreur recherche','red'); }
+  } catch(e) { showToast('Erreur recherche','err'); }
 }
 
 function selectFromQueue(ticketId) {
@@ -100,12 +115,12 @@ function selectFromQueue(ticketId) {
 function renderStandTicket(t) {
   document.getElementById('standTktNum').textContent = t.id;
   document.getElementById('standTktPlayer').textContent = `${t.prenom} ${t.nom.toUpperCase()}`;
-  const catHtml = t.cat ? `<div style="margin-bottom:8px"><span class="podium-cat">Catégorie ${t.cat} — ${SIZE_LABELS[t.cat]}</span></div>` : '';
+  const catHtml = t.cat ? `<div style="margin-bottom:10px"><span class="podium-cat-tag">Catégorie ${t.cat} — ${SIZE_LABELS[t.cat]}</span></div>` : '';
   document.getElementById('standTktPodium').innerHTML = catHtml + renderPodiumLines([t.pick1,t.pick2,t.pick3], finalists);
   const paid = t.status === 'paid';
   const badge = document.getElementById('standTktStatusBadge');
-  badge.textContent = paid ? '✅ Payé' : '⏳ En attente';
-  badge.className = 'status-badge ' + (paid ? 'status-paid' : 'status-pending');
+  badge.textContent = paid ? 'Payé' : 'En attente';
+  badge.className = 'badge ' + (paid ? 'badge-paid' : 'badge-pending');
   document.getElementById('standPayBtn').style.display = paid ? 'none' : 'block';
   document.getElementById('standAlreadyPaid').style.display = paid ? 'block' : 'none';
 }
@@ -118,8 +133,8 @@ async function validatePayment() {
     renderStandTicket(standCurrentTicket);
     refreshStats();
     renderPendingQueue();
-    showToast('Paiement validé ✅');
-  } catch(e) { showToast('Erreur validation','red'); }
+    showToast('Paiement validé');
+  } catch(e) { showToast('Erreur validation','err'); }
 }
 
 async function refreshStats() {
@@ -140,7 +155,7 @@ async function renderPendingQueue() {
     let params = 'status=eq.pending&order=created_at.asc&select=id,prenom,nom,cat';
     if (cat) params += `&cat=eq.${cat}`;
     const pending = await sbGet('tickets', params);
-    if (!pending.length) { el.innerHTML = '<div class="queue-empty">✅ Tout est payé !</div>'; return; }
+    if (!pending.length) { el.innerHTML = '<div class="queue-empty">Tout est payé</div>'; return; }
     el.innerHTML = pending.map(t => `
       <div class="queue-item" onclick="selectFromQueue('${t.id}')">
         <div class="queue-cat-tag">${t.cat||'?'}</div>
@@ -152,7 +167,6 @@ async function renderPendingQueue() {
       </div>`).join('');
   } catch(e) { el.innerHTML = '<div class="alert alert-red">Erreur chargement.</div>'; }
 }
-
 init();
 </script>
 </body>
