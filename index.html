@@ -71,6 +71,18 @@
 
 </main>
 
+<!-- MODAL RECAP -->
+<div id="recapModal" class="modal-overlay" onclick="if(event.target===this)closeRecap()">
+  <div class="modal-box">
+    <div class="modal-title">Récapitulatif</div>
+    <div class="modal-subtitle">Vérifie tes paris avant de confirmer</div>
+    <div id="recapContent"></div>
+    <div class="recap-total"><span>Total à payer</span><span class="amount" id="recapTotal"></span></div>
+    <button class="btn-primary" id="confirmBtn" onclick="confirmBets()" style="margin-top:14px">Confirmer mes paris</button>
+    <button class="btn-outline" onclick="closeRecap()">Modifier</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 <script src="js/supabase.js"></script>
 <script src="js/ui.js"></script>
@@ -167,8 +179,10 @@ function syncSelects(idx) {
   });
 }
 
-// ── SOUMISSION MULTIPLE ──
-async function submitBets() {
+// ── SOUMISSION : validation puis récap ──
+let pendingBets = null;
+
+function submitBets() {
   if (betsClosed) { showError('Les paris sont clôturés.'); return; }
   const prenom = document.getElementById('playerPrenom').value.trim();
   const nom    = document.getElementById('playerNom').value.trim();
@@ -189,9 +203,43 @@ async function submitBets() {
     if (p1===p2||p1===p3||p2===p3) { showError(`Pari ${i+1} : un même binôme ne peut pas occuper deux places.`); return; }
     bets.push({ cat, p1: parseInt(p1), p2: parseInt(p2), p3: parseInt(p3) });
   }
+  hideError();
+  pendingBets = { prenom, nom, tel, bets };
+  openRecap();
+}
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = 'Envoi en cours…'; hideError();
+function openRecap() {
+  const { prenom, nom, tel, bets } = pendingBets;
+  const medals = ['m1','m2','m3'];
+  document.getElementById('recapContent').innerHTML = `
+    <div class="recap-player">
+      <div class="recap-player-name">${prenom} ${nom.toUpperCase()}</div>
+      <div class="recap-player-tel">${tel}</div>
+    </div>` +
+    bets.map((b, i) => `
+    <div class="recap-bet">
+      <div class="recap-bet-title">
+        <span>Pari ${i+1}</span>
+        <span>Cat. ${b.cat} — ${SIZE_LABELS[b.cat]}</span>
+      </div>
+      ${[b.p1,b.p2,b.p3].map((pid, j) => {
+        const f = finalists.find(x => x.id === pid);
+        return `<div class="recap-line"><span class="medal-icon ${medals[j]}">${j+1}</span><span>${f?.chien || '?'} · ${f?.conducteur || '?'}</span></div>`;
+      }).join('')}
+    </div>`).join('');
+  document.getElementById('recapTotal').textContent = (bets.length * 2) + ' €';
+  document.getElementById('recapModal').classList.add('open');
+}
+
+function closeRecap() {
+  document.getElementById('recapModal').classList.remove('open');
+}
+
+async function confirmBets() {
+  if (!pendingBets) return;
+  const { prenom, nom, tel, bets } = pendingBets;
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true; btn.textContent = 'Envoi en cours…';
   try {
     const created = [];
     for (let i = 0; i < bets.length; i++) {
@@ -200,12 +248,14 @@ async function submitBets() {
       await sbPost('tickets', { id: ticketId, prenom, nom, tel, cat: b.cat, pick1: b.p1, pick2: b.p2, pick3: b.p3, status: 'pending' });
       created.push({ id: ticketId, ...b });
     }
+    closeRecap();
     renderTickets(created, prenom, nom);
     document.getElementById('trendCatFilter').value = bets[0].cat;
     renderFavoritesTrend();
+    pendingBets = null;
   } catch(e) {
-    showError('Erreur lors de l\'envoi. Réessaie.');
-    btn.disabled = false; updateBetUI();
+    btn.disabled = false; btn.textContent = 'Confirmer mes paris';
+    showToast('Erreur envoi, réessaie', 'err');
   }
 }
 
