@@ -114,10 +114,15 @@ async function searchTicket() {
       renderStandTicket(standCurrentTicket);
       document.getElementById('standTicketResult').style.display='block';
     } else {
-      // Plusieurs tickets (même personne ou homonymes) : liste cliquable
+      // Plusieurs tickets (même référence, même personne ou homonymes) : liste cliquable
       document.getElementById('standTicketResult').style.display='none';
       multiEl.style.display='block';
-      multiEl.innerHTML = '<div class="section-label" style="margin:4px 0 8px">' + results.length + ' tickets trouvés</div>' +
+      const pending = results.filter(t => t.status !== 'paid');
+      const allBtn = pending.length > 1 ? `
+        <button class="btn-primary" onclick="validateAll('${pending.map(t=>t.id).join(',')}')" style="margin:4px 0 12px">
+          Tout valider — ${pending.length * 2} €
+        </button>` : '';
+      multiEl.innerHTML = '<div class="section-label" style="margin:4px 0 8px">' + results.length + ' tickets trouvés</div>' + allBtn +
         results.map(t => `
         <div class="queue-item" onclick="selectFromQueue('${t.id}')" style="border-left-color:${t.status==='paid'?'var(--lime)':'var(--red)'}">
           <div class="queue-cat-tag">${t.cat||'?'}</div>
@@ -166,6 +171,17 @@ async function validatePayment() {
     refreshStats();
     renderPendingQueue();
     showToast('Paiement validé');
+  } catch(e) { showToast('Erreur validation','err'); }
+}
+
+async function validateAll(idsCsv) {
+  const ids = idsCsv.split(',');
+  try {
+    await sbPatch('tickets', `id=in.(${ids.map(i=>'"'+i+'"').join(',')})`, { status: 'paid' });
+    showToast(`${ids.length} paiements validés`);
+    refreshStats();
+    renderPendingQueue();
+    searchTicket(); // refresh multi list statuses
   } catch(e) { showToast('Erreur validation','err'); }
 }
 

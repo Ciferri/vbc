@@ -241,15 +241,17 @@ async function confirmBets() {
   const btn = document.getElementById('confirmBtn');
   btn.disabled = true; btn.textContent = 'Envoi en cours…';
   try {
+    // Une seule référence pour tous les paris de la soumission
+    const ref = 'VBC-' + Date.now().toString(36).toUpperCase();
     const created = [];
     for (let i = 0; i < bets.length; i++) {
       const b = bets[i];
-      const ticketId = 'VBC-' + Date.now().toString(36).toUpperCase() + (bets.length > 1 ? '-' + (i+1) : '');
+      const ticketId = bets.length > 1 ? `${ref}-${i+1}` : ref;
       await sbPost('tickets', { id: ticketId, prenom, nom, tel, cat: b.cat, pick1: b.p1, pick2: b.p2, pick3: b.p3, status: 'pending' });
       created.push({ id: ticketId, ...b });
     }
     closeRecap();
-    renderTickets(created, prenom, nom);
+    renderTickets(created, prenom, nom, ref);
     document.getElementById('trendCatFilter').value = bets[0].cat;
     renderFavoritesTrend();
     pendingBets = null;
@@ -259,36 +261,45 @@ async function confirmBets() {
   }
 }
 
-function renderTickets(created, prenom, nom) {
+function renderTickets(created, prenom, nom, ref) {
   const section = document.getElementById('ticketSection');
   const total = created.length * 2;
-  section.innerHTML = created.map((t, i) => {
-    const catHtml = `<div style="margin-bottom:10px"><span class="podium-cat-tag">Catégorie ${t.cat} — ${SIZE_LABELS[t.cat]}</span></div>`;
-    return `
-    <div class="ticket" style="margin-bottom:14px;animation-delay:${i*0.12}s">
+  const medals = ['m1','m2','m3'];
+
+  const refCard = `
+    <div class="ticket" style="margin-bottom:14px">
       <div class="ticket-header">
-        <span>Very Breizh Cup${created.length>1?` — Pari ${i+1}/${created.length}`:''}</span>
+        <span>Référence de paiement</span>
         <span class="badge badge-pending">En attente</span>
       </div>
-      <div class="ticket-body">
-        <div class="ticket-num">${t.id}</div>
-        <div class="ticket-player">${prenom} ${nom.toUpperCase()}</div>
-        <div class="ticket-dashed"></div>
-        ${catHtml}${renderPodiumLines([t.p1,t.p2,t.p3], finalists)}
-        <div class="qr-wrapper">
-          <div class="ticket-dashed"></div>
-          <canvas id="qr_${i}" width="130" height="130"></canvas>
-          <div class="qr-label">Scanner au stand de paiement</div>
+      <div class="ticket-body" style="text-align:center">
+        <div style="font-family:var(--font-mono);font-size:1.7rem;color:var(--lime);letter-spacing:.1em;margin:6px 0">${ref}</div>
+        <div class="ticket-player" style="font-size:1.15rem;margin:4px 0 8px">${prenom} ${nom.toUpperCase()}</div>
+        <div style="font-family:var(--font-display);font-weight:900;font-size:1.05rem;color:#fff;text-transform:uppercase;letter-spacing:.06em">
+          ${created.length} pari${created.length>1?'s':''} — <span style="color:var(--lime)">${total} € à régler</span>
         </div>
+        <div class="qr-label" style="margin-top:10px">Donnez cette référence ou votre nom au stand de paiement</div>
       </div>
     </div>`;
-  }).join('') + `
-    <div class="alert alert-red" style="margin-top:4px">Rendez-vous au stand pour valider votre paiement de <strong>${total} €</strong></div>
+
+  const betCards = created.map((t, i) => `
+    <div class="ticket" style="margin-bottom:12px;animation-delay:${(i+1)*0.12}s">
+      <div class="ticket-header">
+        <span>Pari ${i+1}${created.length>1?`/${created.length}`:''}</span>
+        <span class="podium-cat-tag" style="background:rgba(0,0,0,0.15);color:#0F0F0F">Cat. ${t.cat}</span>
+      </div>
+      <div class="ticket-body">
+        ${renderPodiumLines([t.p1,t.p2,t.p3], finalists)}
+      </div>
+    </div>`).join('');
+
+  section.innerHTML = refCard + betCards + `
+    <div class="alert alert-red" style="margin-top:4px">Rendez-vous au stand pour régler vos <strong>${total} €</strong></div>
     <button class="btn-outline" onclick="location.reload()">Nouveau pari</button>`;
 
   document.getElementById('playerFormSection').style.display = 'none';
   section.style.display = 'block';
-  created.forEach((t, i) => drawQR(`qr_${i}`, t.id));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ── TENDANCES ──
