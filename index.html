@@ -36,60 +36,18 @@
       <input type="tel" id="playerTel" class="field-input" placeholder="Ex : 06 12 34 56 78" autocomplete="tel" inputmode="tel">
     </div>
 
-    <div class="card">
-      <div class="card-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        Epreuve
-      </div>
-      <label class="field-label">Catégorie sur laquelle parier</label>
-      <select id="categorySelect" class="field-select" onchange="onCategoryChange()">
-        <option value="">— Sélectionner une catégorie —</option>
-        <option value="S">S — Small</option>
-        <option value="M">M — Medium</option>
-        <option value="I">I — Intermediate</option>
-        <option value="L">L — Large</option>
-      </select>
-    </div>
+    <div id="betsContainer"></div>
 
-    <div class="card" id="podiumCard" style="display:none">
-      <div class="card-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 21V3M3 7l9-4 9 4v6a9 9 0 01-18 0V7z"/></svg>
-        Mon Top 3 — <span id="podiumCardCat"></span>
-      </div>
-      <label class="field-label">1re place</label>
-      <select id="pick1" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
-      <label class="field-label">2e place</label>
-      <select id="pick2" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
-      <label class="field-label">3e place</label>
-      <select id="pick3" class="field-select" onchange="syncSelects()"><option value="">— Choisir un binôme —</option></select>
-    </div>
+    <button class="btn-outline" id="addBetBtn" onclick="addBetBlock()">
+      + Ajouter un autre pari
+    </button>
 
-    <div id="playerFormError" class="alert alert-red" style="display:none"></div>
-    <button class="btn-primary" id="submitBtn" onclick="submitBet()">Valider mon pari — 2 €</button>
+    <div id="playerFormError" class="alert alert-red" style="display:none;margin-top:12px"></div>
+    <button class="btn-primary" id="submitBtn" onclick="submitBets()" style="margin-top:10px">Valider mon pari — 2 €</button>
   </div>
 
-  <!-- TICKET -->
-  <div id="ticketSection" style="display:none">
-    <div class="ticket">
-      <div class="ticket-header">
-        <span>Very Breizh Cup</span>
-        <span id="tktStatusBadge" class="badge badge-pending">En attente</span>
-      </div>
-      <div class="ticket-body">
-        <div class="ticket-num" id="tktNum"></div>
-        <div class="ticket-player" id="tktPlayer"></div>
-        <div class="ticket-dashed"></div>
-        <div id="tktPodium"></div>
-        <div class="qr-wrapper">
-          <div class="ticket-dashed"></div>
-          <canvas id="qrCanvas" width="130" height="130"></canvas>
-          <div class="qr-label">Scanner au stand de paiement</div>
-        </div>
-      </div>
-    </div>
-    <div class="alert alert-red" style="margin-top:12px">Rendez-vous au stand pour valider votre paiement de <strong>2 €</strong></div>
-    <button class="btn-outline" onclick="newBet()">Nouveau pari</button>
-  </div>
+  <!-- TICKETS (rendus dynamiquement) -->
+  <div id="ticketSection" style="display:none"></div>
 
   <hr class="section-divider">
 
@@ -117,7 +75,7 @@
 <script src="js/supabase.js"></script>
 <script src="js/ui.js"></script>
 <script>
-let finalists = [], betsClosed = false;
+let finalists = [], betsClosed = false, betCount = 0;
 
 async function init() {
   try {
@@ -126,76 +84,164 @@ async function init() {
     betsClosed = cfg.bets_closed === 'true';
     document.getElementById('closedBanner').style.display = betsClosed ? 'block' : 'none';
     document.getElementById('submitBtn').disabled = betsClosed;
+    document.getElementById('addBetBtn').style.display = betsClosed ? 'none' : 'block';
   } catch(e) {}
   try { finalists = await sbGet('finalistes', 'order=cat,chien'); } catch(e) {}
+  addBetBlock();
   renderFavoritesTrend();
   realtimeSubscribe('tickets', () => renderFavoritesTrend());
 }
 
-function onCategoryChange() {
-  const cat = document.getElementById('categorySelect').value;
-  const list = cat ? finalists.filter(f => f.cat === cat) : [];
-  const opts = '<option value="">— Choisir un binôme —</option>' + list.map(f => `<option value="${f.id}">${f.chien} · ${f.conducteur}</option>`).join('');
-  ['pick1','pick2','pick3'].forEach(id => { document.getElementById(id).innerHTML = opts; document.getElementById(id).value = ''; });
-  document.getElementById('podiumCard').style.display = cat ? 'block' : 'none';
-  document.getElementById('podiumCardCat').textContent = cat ? `Cat. ${cat} — ${SIZE_LABELS[cat]}` : '';
-  syncSelects();
+// ── BLOCS DE PARIS DYNAMIQUES ──
+function addBetBlock() {
+  betCount++;
+  const idx = betCount;
+  const div = document.createElement('div');
+  div.className = 'card bet-block';
+  div.id = `betBlock${idx}`;
+  div.innerHTML = `
+    <div class="card-title" style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:9px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--lime)"><path d="M8 21h8M12 21V3M3 7l9-4 9 4v6a9 9 0 01-18 0V7z"/></svg>
+        Pari <span class="bet-num">${idx}</span>
+      </span>
+      <button class="btn-sm-danger bet-remove" onclick="removeBetBlock(${idx})" style="display:none">Retirer</button>
+    </div>
+    <label class="field-label">Catégorie</label>
+    <select id="cat${idx}" class="field-select" onchange="onCategoryChange(${idx})">
+      <option value="">— Sélectionner une catégorie —</option>
+      <option value="S">S — Small</option>
+      <option value="M">M — Medium</option>
+      <option value="I">I — Intermediate</option>
+      <option value="L">L — Large</option>
+    </select>
+    <div id="picks${idx}" style="display:none">
+      <label class="field-label">1re place</label>
+      <select id="pick${idx}_1" class="field-select" onchange="syncSelects(${idx})"><option value="">— Choisir un binôme —</option></select>
+      <label class="field-label">2e place</label>
+      <select id="pick${idx}_2" class="field-select" onchange="syncSelects(${idx})"><option value="">— Choisir un binôme —</option></select>
+      <label class="field-label">3e place</label>
+      <select id="pick${idx}_3" class="field-select" onchange="syncSelects(${idx})"><option value="">— Choisir un binôme —</option></select>
+    </div>
+  `;
+  document.getElementById('betsContainer').appendChild(div);
+  updateBetUI();
 }
 
-function syncSelects() {
-  const v = ['pick1','pick2','pick3'].map(id => document.getElementById(id).value);
-  ['pick1','pick2','pick3'].forEach((id, i) => {
-    const sel = document.getElementById(id);
+function removeBetBlock(idx) {
+  const el = document.getElementById(`betBlock${idx}`);
+  if (el) el.remove();
+  updateBetUI();
+}
+
+function getBetBlocks() {
+  return Array.from(document.querySelectorAll('.bet-block'));
+}
+
+function updateBetUI() {
+  const blocks = getBetBlocks();
+  blocks.forEach((b, i) => {
+    b.querySelector('.bet-num').textContent = i + 1;
+    b.querySelector('.bet-remove').style.display = blocks.length > 1 ? 'inline-block' : 'none';
+  });
+  const n = blocks.length;
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = n > 1 ? `Valider mes ${n} paris — ${n*2} €` : 'Valider mon pari — 2 €';
+}
+
+function onCategoryChange(idx) {
+  const cat = document.getElementById(`cat${idx}`).value;
+  const list = cat ? finalists.filter(f => f.cat === cat) : [];
+  const opts = '<option value="">— Choisir un binôme —</option>' + list.map(f => `<option value="${f.id}">${f.chien} · ${f.conducteur}</option>`).join('');
+  [1,2,3].forEach(p => { const s = document.getElementById(`pick${idx}_${p}`); s.innerHTML = opts; s.value = ''; });
+  document.getElementById(`picks${idx}`).style.display = cat ? 'block' : 'none';
+  syncSelects(idx);
+}
+
+function syncSelects(idx) {
+  const v = [1,2,3].map(p => document.getElementById(`pick${idx}_${p}`).value);
+  [1,2,3].forEach((p, i) => {
+    const sel = document.getElementById(`pick${idx}_${p}`);
     const others = v.filter((_, j) => j !== i);
     Array.from(sel.options).forEach(opt => { opt.disabled = !!opt.value && others.includes(opt.value) && opt.value !== sel.value; });
   });
 }
 
-async function submitBet() {
+// ── SOUMISSION MULTIPLE ──
+async function submitBets() {
   if (betsClosed) { showError('Les paris sont clôturés.'); return; }
   const prenom = document.getElementById('playerPrenom').value.trim();
   const nom    = document.getElementById('playerNom').value.trim();
   const tel    = document.getElementById('playerTel').value.trim();
-  const cat    = document.getElementById('categorySelect').value;
-  const p1     = document.getElementById('pick1').value;
-  const p2     = document.getElementById('pick2').value;
-  const p3     = document.getElementById('pick3').value;
   if (!prenom || !nom || !tel) { showError('Remplis ton Prénom, Nom et Téléphone.'); return; }
-  if (!cat)    { showError('Choisis la catégorie de l\'épreuve.'); return; }
-  if (!p1||!p2||!p3) { showError('Sélectionne les 3 positions du podium.'); return; }
-  if (p1===p2||p1===p3||p2===p3) { showError('Un même binôme ne peut pas occuper deux places.'); return; }
+
+  const blocks = getBetBlocks();
+  const bets = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    const idx = b.id.replace('betBlock','');
+    const cat = document.getElementById(`cat${idx}`).value;
+    const p1 = document.getElementById(`pick${idx}_1`).value;
+    const p2 = document.getElementById(`pick${idx}_2`).value;
+    const p3 = document.getElementById(`pick${idx}_3`).value;
+    if (!cat) { showError(`Pari ${i+1} : choisis la catégorie.`); return; }
+    if (!p1||!p2||!p3) { showError(`Pari ${i+1} : sélectionne les 3 positions.`); return; }
+    if (p1===p2||p1===p3||p2===p3) { showError(`Pari ${i+1} : un même binôme ne peut pas occuper deux places.`); return; }
+    bets.push({ cat, p1: parseInt(p1), p2: parseInt(p2), p3: parseInt(p3) });
+  }
+
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Envoi en cours…'; hideError();
   try {
-    const ticketId = 'VBC-' + Date.now().toString(36).toUpperCase();
-    await sbPost('tickets', { id: ticketId, prenom, nom, tel, cat, pick1: parseInt(p1), pick2: parseInt(p2), pick3: parseInt(p3), status: 'pending' });
-    document.getElementById('tktNum').textContent = ticketId;
-    document.getElementById('tktPlayer').textContent = `${prenom} ${nom.toUpperCase()}`;
-    const catHtml = `<div style="margin-bottom:10px"><span class="podium-cat-tag">Catégorie ${cat} — ${SIZE_LABELS[cat]}</span></div>`;
-    document.getElementById('tktPodium').innerHTML = catHtml + renderPodiumLines([parseInt(p1),parseInt(p2),parseInt(p3)], finalists);
-    drawQR('qrCanvas', ticketId);
-    document.getElementById('playerFormSection').style.display = 'none';
-    document.getElementById('ticketSection').style.display = 'block';
-    document.getElementById('trendCatFilter').value = cat;
+    const created = [];
+    for (let i = 0; i < bets.length; i++) {
+      const b = bets[i];
+      const ticketId = 'VBC-' + Date.now().toString(36).toUpperCase() + (bets.length > 1 ? '-' + (i+1) : '');
+      await sbPost('tickets', { id: ticketId, prenom, nom, tel, cat: b.cat, pick1: b.p1, pick2: b.p2, pick3: b.p3, status: 'pending' });
+      created.push({ id: ticketId, ...b });
+    }
+    renderTickets(created, prenom, nom);
+    document.getElementById('trendCatFilter').value = bets[0].cat;
     renderFavoritesTrend();
   } catch(e) {
     showError('Erreur lors de l\'envoi. Réessaie.');
-    btn.disabled = false; btn.textContent = 'Valider mon pari — 2 €';
+    btn.disabled = false; updateBetUI();
   }
 }
 
-function newBet() {
-  document.getElementById('playerFormSection').style.display = 'block';
-  document.getElementById('ticketSection').style.display = 'none';
-  ['playerPrenom','playerNom','playerTel'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('categorySelect').value = '';
-  document.getElementById('podiumCard').style.display = 'none';
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = betsClosed; btn.textContent = 'Valider mon pari — 2 €';
-  ['pick1','pick2','pick3'].forEach(id => document.getElementById(id).innerHTML = '<option value="">— Choisir un binôme —</option>');
-  hideError();
+function renderTickets(created, prenom, nom) {
+  const section = document.getElementById('ticketSection');
+  const total = created.length * 2;
+  section.innerHTML = created.map((t, i) => {
+    const catHtml = `<div style="margin-bottom:10px"><span class="podium-cat-tag">Catégorie ${t.cat} — ${SIZE_LABELS[t.cat]}</span></div>`;
+    return `
+    <div class="ticket" style="margin-bottom:14px;animation-delay:${i*0.12}s">
+      <div class="ticket-header">
+        <span>Very Breizh Cup${created.length>1?` — Pari ${i+1}/${created.length}`:''}</span>
+        <span class="badge badge-pending">En attente</span>
+      </div>
+      <div class="ticket-body">
+        <div class="ticket-num">${t.id}</div>
+        <div class="ticket-player">${prenom} ${nom.toUpperCase()}</div>
+        <div class="ticket-dashed"></div>
+        ${catHtml}${renderPodiumLines([t.p1,t.p2,t.p3], finalists)}
+        <div class="qr-wrapper">
+          <div class="ticket-dashed"></div>
+          <canvas id="qr_${i}" width="130" height="130"></canvas>
+          <div class="qr-label">Scanner au stand de paiement</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + `
+    <div class="alert alert-red" style="margin-top:4px">Rendez-vous au stand pour valider votre paiement de <strong>${total} €</strong></div>
+    <button class="btn-outline" onclick="location.reload()">Nouveau pari</button>`;
+
+  document.getElementById('playerFormSection').style.display = 'none';
+  section.style.display = 'block';
+  created.forEach((t, i) => drawQR(`qr_${i}`, t.id));
 }
 
+// ── TENDANCES ──
 async function renderFavoritesTrend() {
   const cat = document.getElementById('trendCatFilter').value || 'S';
   const el = document.getElementById('favoritesTrendList');
@@ -221,7 +267,7 @@ async function renderFavoritesTrend() {
   } catch(e) { el.innerHTML = '<div class="alert alert-red">Erreur chargement tendances.</div>'; }
 }
 
-function showError(msg) { const e=document.getElementById('playerFormError'); e.style.display='block'; e.textContent=msg; }
+function showError(msg) { const e=document.getElementById('playerFormError'); e.style.display='block'; e.textContent=msg; e.scrollIntoView({behavior:'smooth',block:'center'}); }
 function hideError() { document.getElementById('playerFormError').style.display='none'; }
 init();
 </script>

@@ -29,6 +29,7 @@
   </div>
 
   <div id="standNoResult" class="alert alert-red" style="display:none">Aucun ticket trouvé.</div>
+  <div id="standMultiResults" style="display:none"></div>
 
   <div id="standTicketResult" style="display:none">
     <div class="ticket">
@@ -89,16 +90,44 @@ async function init() {
 
 async function searchTicket() {
   const raw = document.getElementById('searchInput').value.trim();
-  if (!raw) { document.getElementById('standNoResult').style.display='none'; document.getElementById('standTicketResult').style.display='none'; return; }
-  try {
-    let results = await sbGet('tickets', `id=ilike.*${raw}*&limit=1`);
-    if (!results.length) results = await sbGet('tickets', `nom=ilike.*${raw}*&limit=1`);
-    if (!results.length) results = await sbGet('tickets', `prenom=ilike.*${raw}*&limit=1`);
-    if (!results.length) { document.getElementById('standNoResult').style.display='block'; document.getElementById('standTicketResult').style.display='none'; standCurrentTicket=null; return; }
-    standCurrentTicket = results[0];
+  const multiEl = document.getElementById('standMultiResults');
+  if (!raw) {
     document.getElementById('standNoResult').style.display='none';
-    renderStandTicket(standCurrentTicket);
-    document.getElementById('standTicketResult').style.display='block';
+    document.getElementById('standTicketResult').style.display='none';
+    multiEl.innerHTML = ''; multiEl.style.display='none';
+    return;
+  }
+  try {
+    let results = await sbGet('tickets', `id=ilike.*${raw}*&limit=10`);
+    if (!results.length) results = await sbGet('tickets', `nom=ilike.*${raw}*&limit=10`);
+    if (!results.length) results = await sbGet('tickets', `prenom=ilike.*${raw}*&limit=10`);
+    if (!results.length) {
+      document.getElementById('standNoResult').style.display='block';
+      document.getElementById('standTicketResult').style.display='none';
+      multiEl.innerHTML = ''; multiEl.style.display='none';
+      standCurrentTicket=null; return;
+    }
+    document.getElementById('standNoResult').style.display='none';
+    if (results.length === 1) {
+      multiEl.innerHTML = ''; multiEl.style.display='none';
+      standCurrentTicket = results[0];
+      renderStandTicket(standCurrentTicket);
+      document.getElementById('standTicketResult').style.display='block';
+    } else {
+      // Plusieurs tickets (même personne ou homonymes) : liste cliquable
+      document.getElementById('standTicketResult').style.display='none';
+      multiEl.style.display='block';
+      multiEl.innerHTML = '<div class="section-label" style="margin:4px 0 8px">' + results.length + ' tickets trouvés</div>' +
+        results.map(t => `
+        <div class="queue-item" onclick="selectFromQueue('${t.id}')" style="border-left-color:${t.status==='paid'?'var(--lime)':'var(--red)'}">
+          <div class="queue-cat-tag">${t.cat||'?'}</div>
+          <div class="queue-info">
+            <div class="queue-name">${t.prenom} ${t.nom}</div>
+            <div class="queue-num">${t.id}</div>
+          </div>
+          <span class="badge ${t.status==='paid'?'badge-paid':'badge-pending'}">${t.status==='paid'?'Payé':'Attente'}</span>
+        </div>`).join('');
+    }
   } catch(e) { showToast('Erreur recherche','err'); }
 }
 
@@ -106,8 +135,9 @@ function selectFromQueue(ticketId) {
   sbGet('tickets', `id=eq.${ticketId}&limit=1`).then(results => {
     if (!results.length) return;
     standCurrentTicket = results[0];
-    document.getElementById('searchInput').value = '';
     document.getElementById('standNoResult').style.display='none';
+    const multiEl = document.getElementById('standMultiResults');
+    multiEl.innerHTML = ''; multiEl.style.display='none';
     renderStandTicket(standCurrentTicket);
     document.getElementById('standTicketResult').style.display='block';
     document.getElementById('standTicketResult').scrollIntoView({behavior:'smooth',block:'start'});

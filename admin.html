@@ -244,30 +244,40 @@ async function calculateWinners() {
   try {
     const paid = await sbGet('tickets', `status=eq.paid&cat=eq.${cat}&select=*`);
     const f1=finalists.find(f=>f.id===o1), f2=finalists.find(f=>f.id===o2), f3=finalists.find(f=>f.id===o3);
-    let html = `<div style="background:var(--light);border-radius:var(--radius);padding:14px;margin-bottom:14px;border:1.5px solid var(--border)">
+    let html = `<div style="background:var(--surface);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;border:1.5px solid var(--border)">
       <div class="section-label" style="margin-bottom:8px">Podium officiel</div>
       <div class="podium-line" style="color:var(--text)"><span class="medal-icon m1">1</span><span>${f1?.chien} · ${f1?.conducteur}</span></div>
       <div class="podium-line" style="color:var(--text)"><span class="medal-icon m2">2</span><span>${f2?.chien} · ${f2?.conducteur}</span></div>
       <div class="podium-line" style="color:var(--text)"><span class="medal-icon m3">3</span><span>${f3?.chien} · ${f3?.conducteur}</span></div>
     </div>`;
     if (!paid.length) { el.innerHTML = html + '<div class="alert alert-yellow">Aucun ticket payé pour cette catégorie.</div>'; return; }
-    const exact = paid.filter(t => t.pick1===o1&&t.pick2===o2&&t.pick3===o3);
-    if (exact.length) {
-      html += `<div class="section-label" style="color:var(--lime-dark);margin-bottom:8px">Top 3 exact — ${exact.length} gagnant(s)</div>`;
-      html += exact.map(t => `<div style="background:var(--lime-light);border:1.5px solid var(--lime);border-radius:var(--radius);padding:14px;margin-bottom:8px">
-        <div style="font-family:var(--font-display);font-weight:900;font-size:1.2rem;color:var(--lime-dark)">${t.prenom} ${t.nom.toUpperCase()}</div>
+
+    // Règle : gagnants = les 3 bons chiens quel que soit l'ordre.
+    // Départage : si certains ont l'ordre exact, ce sont eux les gagnants.
+    const officialSet = [o1, o2, o3].sort((a,b)=>a-b).join(',');
+    const goodDogs = paid.filter(t => [t.pick1,t.pick2,t.pick3].sort((a,b)=>a-b).join(',') === officialSet);
+    const exactOrder = goodDogs.filter(t => t.pick1===o1 && t.pick2===o2 && t.pick3===o3);
+
+    const ticketCard = (t, color, borderColor, bg) => `
+      <div style="background:${bg};border:1.5px solid ${borderColor};border-radius:var(--radius-sm);padding:14px;margin-bottom:8px">
+        <div style="font-family:var(--font-display);font-weight:900;font-size:1.15rem;color:${color}">${t.prenom} ${t.nom.toUpperCase()}</div>
         <div style="font-family:var(--font-mono);font-size:.78rem;color:var(--muted);margin-top:3px">${t.id} · ${t.tel}</div>
-      </div>`).join('');
+      </div>`;
+
+    if (!goodDogs.length) {
+      html += '<div class="alert alert-red">Aucun ticket payé n\'a trouvé les 3 chiens du podium.</div>';
+    } else if (exactOrder.length) {
+      html += `<div class="section-label" style="color:var(--lime-text);margin-bottom:8px">Gagnants — Ordre exact (${exactOrder.length})</div>`;
+      html += exactOrder.map(t => ticketCard(t, 'var(--lime-text)', 'var(--lime)', 'var(--lime-soft)')).join('');
+      const others = goodDogs.filter(t => !exactOrder.includes(t));
+      if (others.length) {
+        html += `<div class="section-label" style="margin:14px 0 8px">3 bons chiens sans l'ordre — départagés (${others.length})</div>`;
+        html += others.map(t => ticketCard(t, 'var(--muted)', 'var(--border)', 'var(--surface)')).join('');
+      }
     } else {
-      const top2 = paid.filter(t => t.pick1===o1&&t.pick2===o2);
-      html += '<div class="alert alert-yellow" style="margin-bottom:10px">Aucun Top 3 exact. Meilleur résultat : Top 2 exact.</div>';
-      if (top2.length) {
-        html += `<div class="section-label" style="color:#92400e;margin-bottom:8px">Top 2 exact — ${top2.length} proche(s)</div>`;
-        html += top2.map(t => `<div style="background:rgba(217,119,6,.07);border:1.5px solid rgba(217,119,6,.3);border-radius:var(--radius);padding:14px;margin-bottom:8px">
-          <div style="font-family:var(--font-display);font-weight:900;font-size:1.1rem;color:#92400e">${t.prenom} ${t.nom.toUpperCase()}</div>
-          <div style="font-family:var(--font-mono);font-size:.78rem;color:var(--muted);margin-top:3px">${t.id} · ${t.tel}</div>
-        </div>`).join('');
-      } else { html += '<div class="alert alert-red">Personne n\'a le Top 2 exact non plus.</div>'; }
+      html += `<div class="alert alert-lime" style="margin-bottom:10px">Personne n'a l'ordre exact. Gagnants : les 3 bons chiens, tous ordres confondus.</div>`;
+      html += `<div class="section-label" style="color:var(--lime-text);margin-bottom:8px">Gagnants — 3 bons chiens (${goodDogs.length})</div>`;
+      html += goodDogs.map(t => ticketCard(t, 'var(--lime-text)', 'var(--lime)', 'var(--lime-soft)')).join('');
     }
     el.innerHTML = html;
     el.scrollIntoView({behavior:'smooth',block:'start'});
