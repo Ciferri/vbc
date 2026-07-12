@@ -13,7 +13,7 @@
 <body>
 <header class="app-header">
   <div class="header-logo">
-    <img src="js/logo.png" alt="Club Canin de Bourgbarré">
+    <img src="js/logo.jpg" alt="Club Canin de Bourgbarré">
     <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">Résultats en direct</span></div>
   </div>
   <div class="live-label"><span class="live-dot"></span>Live</div>
@@ -61,7 +61,9 @@ async function init() {
   renderAll();
   realtimeSubscribe('chronos', () => renderAll());
   realtimeSubscribe('tickets', () => renderTrend());
-  setInterval(renderAll, 30000);
+  // Rafraîchissement seulement si l'onglet est visible (économie de requêtes)
+  setInterval(() => { if (!document.hidden) renderAll(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAll(); });
 }
 
 function switchCat(cat, btn) {
