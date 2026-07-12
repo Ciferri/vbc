@@ -267,16 +267,29 @@ async function calculateWinners() {
     const officialIds = [o1, o2, o3];
     const officialSet = [...officialIds].sort((a,b)=>a-b).join(',');
 
-    const tiers = { exact: [], allThree: [], two: [], one: [] };
-    paid.forEach(t => {
+    // Score de proximité : nb de chiens corrects + nb à la position exacte
+    const enrich = t => {
       const picks = [t.pick1, t.pick2, t.pick3];
       const matches = picks.filter(p => officialIds.includes(p)).length;
+      const placed  = (t.pick1===o1?1:0) + (t.pick2===o2?1:0) + (t.pick3===o3?1:0);
       const sameSet = [...picks].sort((a,b)=>a-b).join(',') === officialSet;
-      if (sameSet && t.pick1===o1 && t.pick2===o2 && t.pick3===o3) tiers.exact.push(t);
-      else if (sameSet) tiers.allThree.push(t);
-      else if (matches === 2) tiers.two.push(t);
-      else if (matches === 1) tiers.one.push(t);
-    });
+      return { ...t, matches, placed, sameSet };
+    };
+
+    // Tri intra-niveau : plus de chiens bien placés d'abord, puis premier pari enregistré
+    const proximitySort = (a, b) =>
+      b.placed - a.placed ||
+      new Date(a.created_at) - new Date(b.created_at);
+
+    const enriched = paid.map(enrich);
+    const tiers = {
+      exact:    enriched.filter(t => t.sameSet && t.placed === 3),
+      allThree: enriched.filter(t => t.sameSet && t.placed < 3).sort(proximitySort),
+      two:      enriched.filter(t => !t.sameSet && t.matches === 2).sort(proximitySort),
+      one:      enriched.filter(t => !t.sameSet && t.matches === 1).sort(proximitySort),
+    };
+    // L'ordre exact se départage par ancienneté uniquement
+    tiers.exact.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
 
     // Carte gagnant dépliable : clic pour voir le pari complet
     const ticketCard = (t, color, borderColor, bg, extraBadge='') => {
@@ -309,6 +322,10 @@ async function calculateWinners() {
     const sectionTitle = (label, count, color) => `
       <div class="section-label" style="margin:16px 0 8px;color:${color}">${label} (${count})</div>`;
 
+    const placedBadge = t => t.placed > 0
+      ? `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">${t.matches} bon${t.matches>1?'s':''} · ${t.placed} placé${t.placed>1?'s':''}</span>`
+      : `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">${t.matches} bon${t.matches>1?'s':''}</span>`;
+
     let anyone = false;
     if (tiers.exact.length) {
       anyone = true;
@@ -318,17 +335,19 @@ async function calculateWinners() {
     if (tiers.allThree.length) {
       anyone = true;
       html += sectionTitle('Les 3 bons chiens (ordre différent)', tiers.allThree.length, 'var(--lime-text)');
-      html += tiers.allThree.map(t => ticketCard(t, 'var(--text)', 'rgba(141,198,63,0.5)', 'var(--surface)')).join('');
+      html += tiers.allThree.map(t => ticketCard(t, 'var(--text)', 'rgba(141,198,63,0.5)', 'var(--surface)', placedBadge(t))).join('');
     }
     if (tiers.two.length || tiers.one.length) {
       anyone = true;
       html += sectionTitle('1 ou 2 bons chiens', tiers.two.length + tiers.one.length, 'var(--muted)');
-      const badge = n => `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">${n} bon${n>1?'s':''}</span>`;
-      html += tiers.two.map(t => ticketCard(t, 'var(--text)', 'var(--border)', 'var(--surface)', badge(2))).join('');
-      html += tiers.one.map(t => ticketCard(t, 'var(--muted)', 'var(--border)', 'transparent', badge(1))).join('');
+      html += tiers.two.map(t => ticketCard(t, 'var(--text)', 'var(--border)', 'var(--surface)', placedBadge(t))).join('');
+      html += tiers.one.map(t => ticketCard(t, 'var(--muted)', 'var(--border)', 'transparent', placedBadge(t))).join('');
     }
     if (!anyone) {
       html += '<div class="alert alert-red">Aucun ticket payé n\'a trouvé le moindre chien du podium.</div>';
+    }
+    if (anyone) {
+      html += '<p style="font-size:.74rem;color:var(--muted);margin-top:10px;line-height:1.5">Tri au sein de chaque niveau : nombre de chiens à la bonne position, puis premier pari enregistré.</p>';
     }
     el.innerHTML = html;
     el.scrollIntoView({behavior:'smooth',block:'start'});
