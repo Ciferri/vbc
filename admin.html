@@ -252,32 +252,61 @@ async function calculateWinners() {
     </div>`;
     if (!paid.length) { el.innerHTML = html + '<div class="alert alert-yellow">Aucun ticket payé pour cette catégorie.</div>'; return; }
 
-    // Règle : gagnants = les 3 bons chiens quel que soit l'ordre.
-    // Départage : si certains ont l'ordre exact, ce sont eux les gagnants.
-    const officialSet = [o1, o2, o3].sort((a,b)=>a-b).join(',');
-    const goodDogs = paid.filter(t => [t.pick1,t.pick2,t.pick3].sort((a,b)=>a-b).join(',') === officialSet);
-    const exactOrder = goodDogs.filter(t => t.pick1===o1 && t.pick2===o2 && t.pick3===o3);
+    // Classement par niveau :
+    // Niveau 1 : les 3 chiens dans l'ordre exact
+    // Niveau 2 : les 3 bons chiens, ordre différent
+    // Niveau 3 : 2 bons chiens ou 1 bon chien
+    const officialIds = [o1, o2, o3];
+    const officialSet = [...officialIds].sort((a,b)=>a-b).join(',');
 
-    const ticketCard = (t, color, borderColor, bg) => `
-      <div style="background:${bg};border:1.5px solid ${borderColor};border-radius:var(--radius-sm);padding:14px;margin-bottom:8px">
-        <div style="font-family:var(--font-display);font-weight:900;font-size:1.15rem;color:${color}">${t.prenom} ${t.nom.toUpperCase()}</div>
-        <div style="font-family:var(--font-mono);font-size:.78rem;color:var(--muted);margin-top:3px">${t.id} · ${t.tel}</div>
+    const tiers = { exact: [], allThree: [], two: [], one: [] };
+    paid.forEach(t => {
+      const picks = [t.pick1, t.pick2, t.pick3];
+      const matches = picks.filter(p => officialIds.includes(p)).length;
+      const sameSet = [...picks].sort((a,b)=>a-b).join(',') === officialSet;
+      if (sameSet && t.pick1===o1 && t.pick2===o2 && t.pick3===o3) tiers.exact.push({ ...t, matches: 3 });
+      else if (sameSet) tiers.allThree.push({ ...t, matches: 3 });
+      else if (matches === 2) tiers.two.push({ ...t, matches });
+      else if (matches === 1) tiers.one.push({ ...t, matches });
+    });
+
+    const ticketCard = (t, color, borderColor, bg, extra='') => `
+      <div style="background:${bg};border:1.5px solid ${borderColor};border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div style="font-family:var(--font-display);font-weight:900;font-size:1.1rem;color:${color}">${t.prenom} ${t.nom.toUpperCase()}</div>
+          <div style="font-family:var(--font-mono);font-size:.76rem;color:var(--muted);margin-top:2px">${t.id} · ${t.tel}</div>
+        </div>
+        ${extra}
       </div>`;
 
-    if (!goodDogs.length) {
-      html += '<div class="alert alert-red">Aucun ticket payé n\'a trouvé les 3 chiens du podium.</div>';
-    } else if (exactOrder.length) {
-      html += `<div class="section-label" style="color:var(--lime-text);margin-bottom:8px">Gagnants — Ordre exact (${exactOrder.length})</div>`;
-      html += exactOrder.map(t => ticketCard(t, 'var(--lime-text)', 'var(--lime)', 'var(--lime-soft)')).join('');
-      const others = goodDogs.filter(t => !exactOrder.includes(t));
-      if (others.length) {
-        html += `<div class="section-label" style="margin:14px 0 8px">3 bons chiens sans l'ordre — départagés (${others.length})</div>`;
-        html += others.map(t => ticketCard(t, 'var(--muted)', 'var(--border)', 'var(--surface)')).join('');
-      }
-    } else {
-      html += `<div class="alert alert-lime" style="margin-bottom:10px">Personne n'a l'ordre exact. Gagnants : les 3 bons chiens, tous ordres confondus.</div>`;
-      html += `<div class="section-label" style="color:var(--lime-text);margin-bottom:8px">Gagnants — 3 bons chiens (${goodDogs.length})</div>`;
-      html += goodDogs.map(t => ticketCard(t, 'var(--lime-text)', 'var(--lime)', 'var(--lime-soft)')).join('');
+    const sectionTitle = (rank, label, count, color) => `
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0 8px">
+        <span style="font-family:var(--font-display);font-weight:900;font-size:1.2rem;color:${color};min-width:26px">${rank}</span>
+        <span class="section-label" style="margin:0;color:${color}">${label} (${count})</span>
+      </div>`;
+
+    let anyone = false;
+
+    if (tiers.exact.length) {
+      anyone = true;
+      html += sectionTitle('1er', 'Les 3 chiens dans l\'ordre exact', tiers.exact.length, 'var(--lime-text)');
+      html += tiers.exact.map(t => ticketCard(t, 'var(--lime-text)', 'var(--lime)', 'var(--lime-soft)')).join('');
+    }
+    if (tiers.allThree.length) {
+      anyone = true;
+      html += sectionTitle(tiers.exact.length ? '2e' : '1er', 'Les 3 bons chiens (ordre différent)', tiers.allThree.length, 'var(--lime-text)');
+      html += tiers.allThree.map(t => ticketCard(t, 'var(--text)', 'rgba(141,198,63,0.5)', 'var(--surface)')).join('');
+    }
+    if (tiers.two.length || tiers.one.length) {
+      anyone = true;
+      const rank = (tiers.exact.length && tiers.allThree.length) ? '3e' : (tiers.exact.length || tiers.allThree.length) ? '2e' : '1er';
+      html += sectionTitle(rank, '1 ou 2 bons chiens', tiers.two.length + tiers.one.length, 'var(--muted)');
+      const badge = n => `<span class="badge" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">${n} bon${n>1?'s':''}</span>`;
+      html += tiers.two.map(t => ticketCard(t, 'var(--text)', 'var(--border)', 'var(--surface)', badge(2))).join('');
+      html += tiers.one.map(t => ticketCard(t, 'var(--muted)', 'var(--border)', 'transparent', badge(1))).join('');
+    }
+    if (!anyone) {
+      html += '<div class="alert alert-red">Aucun ticket payé n\'a trouvé le moindre chien du podium.</div>';
     }
     el.innerHTML = html;
     el.scrollIntoView({behavior:'smooth',block:'start'});
