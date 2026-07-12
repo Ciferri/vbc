@@ -49,6 +49,17 @@
 
     <div class="card">
       <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        Phase de test
+      </div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px;line-height:1.5">Outils pour tester l'application avec des données factices. À ne pas utiliser le jour de l'événement.</p>
+      <button class="btn-outline" onclick="seedFinalists()" style="margin-top:0">Ajouter 10 chiens par catégorie</button>
+      <button class="btn-outline" onclick="seedTickets(100)">Générer 100 paris répartis</button>
+      <button class="btn-danger" onclick="resetAll()">Reset — Tout supprimer</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
         Contrôle des paris
       </div>
@@ -332,6 +343,84 @@ async function renderAllTickets() {
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML = '<div class="alert alert-red">Erreur chargement.</div>'; }
+}
+
+// ── OUTILS DE TEST ──
+const SEED_DOGS = ['Vaina','Viper','Pixie','Sakura','Storm','Blitz','Ficelle','Praline','Echo','Nova','Cosmo','Mistral','Rumba','Cyclone','Zorro','Kiwi','Ember','Saphir','Onyx','Loupiote','Diamant','Fusee','Tornade','Bambou','Comete','Pepite','Eclair','Caline','Rocket','Mambo','Tango','Spark','Nuage','Indy','Wasabi','Cookie','Maverick','Luna','Rio','Volt'];
+const SEED_FIRST = ['Sophie','Thomas','Lucie','Kevin','Anaelle','Romain','Marie','Yann','Camille','Erwan','Melanie','Loic','Julie','Gwen','Anthony','Maelle','Pierrick','Solenn','Florian','Aurelie'];
+const SEED_LAST = ['Tanguy','Le Goff','Morvan','Riou','Brehon','Caouissin','Le Bras','Quere','Quemener','Le Bihan','Guillou','Pichon','Le Roux','Cariou','Le Gall','Floch','Le Berre','Salaun','Le Moal','Allain'];
+const SEED_PLAYER_FIRST = ['Lea','Hugo','Emma','Louis','Camille','Nathan','Chloe','Mael','Ines','Tom','Manon','Enzo','Jade','Noah','Lina','Paul','Anna','Theo','Lola','Axel','Eva','Liam','Zoe','Adam','Romane','Gabin','Juliette','Tiago','Clara','Mathis'];
+
+function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffleArr(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+async function seedFinalists() {
+  if (!confirm('Ajouter 10 chiens de test dans chaque catégorie (40 au total) ?')) return;
+  showToast('Génération en cours…');
+  try {
+    const dogPool = shuffleArr(SEED_DOGS);
+    const rows = [];
+    let di = 0;
+    ['S','M','I','L'].forEach(cat => {
+      for (let i = 0; i < 10; i++) {
+        const base = dogPool[di % dogPool.length];
+        const chien = di >= dogPool.length ? base + ' ' + (Math.floor(di / dogPool.length) + 1) : base;
+        di++;
+        rows.push({ conducteur: rnd(SEED_FIRST) + ' ' + rnd(SEED_LAST), chien, cat });
+      }
+    });
+    const inserted = await sbPost('finalistes', rows);
+    finalists = finalists.concat(inserted);
+    finalists.sort((a,b)=>a.cat.localeCompare(b.cat)||a.chien.localeCompare(b.chien));
+    renderFinalistList();
+    showToast('40 finalistes ajoutés');
+  } catch(e) { showToast('Erreur génération','err'); }
+}
+
+async function seedTickets(count) {
+  if (!finalists.length) { showToast('Ajoute d\'abord des finalistes','err'); return; }
+  const byCat = { S: [], M: [], I: [], L: [] };
+  finalists.forEach(f => { if (byCat[f.cat]) byCat[f.cat].push(f); });
+  const eligible = Object.keys(byCat).filter(c => byCat[c].length >= 3);
+  if (!eligible.length) { showToast('Minimum 3 finalistes par catégorie','err'); return; }
+  if (!confirm(`Générer ${count} paris de test répartis sur ${eligible.length} catégorie(s) ?`)) return;
+  showToast('Génération en cours…');
+  try {
+    const rows = [];
+    const base = Date.now().toString(36).toUpperCase();
+    for (let i = 0; i < count; i++) {
+      const cat = rnd(eligible);
+      const picks = shuffleArr(byCat[cat]).slice(0, 3).map(f => f.id);
+      rows.push({
+        id: `VBC-T${base}-${i+1}`,
+        prenom: rnd(SEED_PLAYER_FIRST),
+        nom: rnd(SEED_LAST),
+        tel: '06' + String(Math.floor(10000000 + Math.random()*89999999)),
+        cat, pick1: picks[0], pick2: picks[1], pick3: picks[2],
+        status: Math.random() < 0.75 ? 'paid' : 'pending'
+      });
+    }
+    await sbPost('tickets', rows);
+    refreshStats();
+    renderAllTickets();
+    showToast(`${count} paris générés`);
+  } catch(e) { showToast('Erreur génération','err'); }
+}
+
+async function resetAll() {
+  if (!confirm('SUPPRIMER tous les paris ET tous les finalistes ? Cette action est définitive.')) return;
+  if (!confirm('Vraiment sûr ? Toute la base sera vidée.')) return;
+  showToast('Suppression en cours…');
+  try {
+    await sbDelete('chronos', 'id=gte.0');
+    await sbDelete('tickets', 'id=neq.___none___');
+    await sbDelete('finalistes', 'id=gte.0');
+    finalists = [];
+    refreshStats();
+    renderFinalistList();
+    renderAllTickets();
+    showToast('Base réinitialisée');
+  } catch(e) { showToast('Erreur reset','err'); }
 }
 </script>
 </body>
