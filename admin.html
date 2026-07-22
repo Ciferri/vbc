@@ -453,7 +453,6 @@ async function resetAll() {
   if (!confirm('Vraiment sûr ? Toute la base sera vidée.')) return;
   showToast('Suppression en cours…');
   try {
-    await sbDelete('chronos', 'id=gte.0');
     await sbDelete('tickets', 'id=neq.___none___');
     await sbDelete('finalistes', 'id=gte.0');
     finalists = [];
@@ -461,7 +460,10 @@ async function resetAll() {
     renderFinalistList();
     renderAllTickets();
     showToast('Base réinitialisée');
-  } catch(e) { showToast('Erreur reset','err'); }
+  } catch(e) {
+    console.error('Reset:', e);
+    alert('Le reset a échoué.\n\n' + (e.message || e) + '\n\nSi le message mentionne une policy ou row-level security, il manque la policy DELETE sur la table concernée.');
+  }
 }
 </script>
 </body>

@@ -3,25 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Very Breizh Cup — Résultats Live</title>
+<title>Very Breizh Cup — Cotes des favoris</title>
 <script>(function(){var t=localStorage.getItem("vbc_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
 <link rel="stylesheet" href="js/style.css">
-<style>
-  .live-label { display:flex; align-items:center; gap:6px; font-family:var(--font-display); font-weight:700; font-size:.72rem; text-transform:uppercase; letter-spacing:.15em; color:var(--lime-dark); }
-</style>
 </head>
 <body>
 <header class="app-header">
   <div class="header-logo">
     <img src="js/logo.jpg" alt="Club Canin de Bourgbarré">
-    <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">Résultats en direct</span></div>
+    <div class="app-title">Very Breizh <span class="cup">Cup</span><span class="sub">Cotes des favoris</span></div>
   </div>
-  <div class="live-label"><span class="live-dot"></span>Live</div>
 </header>
 <main class="page">
 
   <div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;font-family:var(--font-display);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.15em;color:var(--lime-text)">
-    <span class="live-dot"></span>Résultats en direct
+    <span class="live-dot"></span>Mise à jour en direct
   </div>
 
   <div class="cat-tabs">
@@ -33,20 +29,15 @@
 
   <div class="card">
     <div class="card-title" id="catTitle">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 21V3M3 7l9-4 9 4v6a9 9 0 01-18 0V7z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
       Catégorie S — Small
     </div>
     <div id="podiumVisual"></div>
-    <div id="classementComplet"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-      Favoris du public — <span id="trendCatLabel">S</span>
-    </div>
-    <div id="trendDisplay"><div class="spinner"></div></div>
-    <p style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.5">Basé sur l'ensemble des pronostics enregistrés.</p>
+    <div id="cotesList"><div class="spinner"></div></div>
+    <p style="font-size:.72rem;color:var(--muted);margin-top:12px;line-height:1.5">
+      Cote calculée sur l'ensemble des paris enregistrés : 3 points pour une 1re place, 2 pour une 2e, 1 pour une 3e.
+      Plus la cote est basse, plus le binôme est favori du public.
+    </p>
   </div>
 
 </main>
@@ -58,85 +49,82 @@ let finalists = [], currentCat = 'S';
 
 async function init() {
   try { finalists = await sbGet('finalistes', 'order=cat,chien'); } catch(e) {}
-  renderAll();
-  realtimeSubscribe('chronos', () => renderAll());
-  realtimeSubscribe('tickets', () => renderTrend());
-  // Rafraîchissement seulement si l'onglet est visible (économie de requêtes)
-  setInterval(() => { if (!document.hidden) renderAll(); }, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderAll(); });
+  renderCotes();
+  realtimeSubscribe('tickets', () => renderCotes());
+  setInterval(() => { if (!document.hidden) renderCotes(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderCotes(); });
 }
 
 function switchCat(cat, btn) {
   currentCat = cat;
   document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('catTitle').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 21V3M3 7l9-4 9 4v6a9 9 0 01-18 0V7z"/></svg> Catégorie ${cat} — ${SIZE_LABELS[cat]}`;
-  document.getElementById('trendCatLabel').textContent = cat;
-  renderAll();
+  document.getElementById('catTitle').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Catégorie ${cat} — ${SIZE_LABELS[cat]}`;
+  renderCotes();
 }
 
-async function renderAll() { await Promise.all([renderClassement(), renderTrend()]); }
-
-async function renderClassement() {
-  const podEl = document.getElementById('podiumVisual');
-  const listEl = document.getElementById('classementComplet');
+async function renderCotes() {
+  const podEl  = document.getElementById('podiumVisual');
+  const listEl = document.getElementById('cotesList');
   try {
-    const chronos = await sbGet('chronos', `cat=eq.${currentCat}&select=*`);
+    const tickets = await sbGet('tickets', `cat=eq.${currentCat}&select=pick1,pick2,pick3`);
     const dogs = finalists.filter(f => f.cat === currentCat);
-    if (!chronos.length) {
-      podEl.innerHTML = '<p style="color:var(--muted);text-align:center;padding:24px 0;font-size:.9rem">En attente des résultats…</p>';
-      listEl.innerHTML = ''; return;
-    }
-    const rows = chronos.map(c => {
-      const f = dogs.find(d => d.id === c.finaliste_id);
-      return { ...c, f, score: c.disqualifie ? Infinity : (c.temps_sec||0)+(c.penalites||0) };
-    }).sort((a,b) => a.score - b.score);
 
-    const valid = rows.filter(r => !r.disqualifie);
-    if (valid.length >= 1) {
-      const display = [valid[1], valid[0], valid[2]].filter(Boolean);
+    if (!dogs.length) {
+      podEl.innerHTML = '';
+      listEl.innerHTML = '<p style="color:var(--muted);font-size:.9rem">Aucun finaliste dans cette catégorie.</p>';
+      return;
+    }
+
+    const pts = {}; dogs.forEach(f => { pts[f.id] = 0; });
+    let total = 0;
+    tickets.forEach(t => {
+      [t.pick1, t.pick2, t.pick3].forEach((id, i) => {
+        if (id && pts.hasOwnProperty(id)) { pts[id] += PODIUM_W[i]; total += PODIUM_W[i]; }
+      });
+    });
+
+    if (total === 0) {
+      podEl.innerHTML = '';
+      listEl.innerHTML = '<p style="color:var(--muted);font-size:.9rem">Aucun pari enregistré pour cette catégorie.</p>';
+      return;
+    }
+
+    const maxPts = Math.max(...Object.values(pts), 1);
+    const ranked = dogs
+      .map(f => ({ ...f, pts: pts[f.id], cote: pts[f.id] > 0 ? total / pts[f.id] : Infinity }))
+      .sort((a, b) => a.cote - b.cote || a.chien.localeCompare(b.chien))
+      .slice(0, 10);
+
+    // Podium des 3 favoris
+    const top3 = ranked.filter(f => f.pts > 0).slice(0, 3);
+    if (top3.length >= 3) {
+      const display = [top3[1], top3[0], top3[2]];
       const classes = ['p2','p1','p3'];
       const labels  = ['2','1','3'];
       podEl.innerHTML = `<div class="podium-display">${display.map((r,i) => `
         <div class="podium-col">
-          <div class="podium-label">${r.f?.chien||'?'}<br><span class="podium-sub">${r.f?.conducteur||''}</span></div>
+          <div class="podium-label">${r.chien}<br><span class="podium-sub">cote ${r.cote.toFixed(2)}</span></div>
           <div class="podium-block ${classes[i]}">${labels[i]}</div>
         </div>`).join('')}</div>`;
-    } else { podEl.innerHTML = ''; }
+    } else {
+      podEl.innerHTML = '';
+    }
 
-    listEl.innerHTML = rows.map((r,i) => `
-      <div class="chrono-row">
-        <div class="chrono-pos ${r.disqualifie?'chrono-dq':''}">${r.disqualifie?'DQ':i+1}</div>
-        <div class="chrono-info">
-          <div class="chrono-name ${r.disqualifie?'chrono-dq':''}">${r.f?.chien||'?'} · ${r.f?.conducteur||'?'}</div>
-          <div class="chrono-detail">${r.disqualifie?'Disqualifié':`${r.penalites||0} pt(s) de pénalité`}</div>
+    listEl.innerHTML = `<div class="section-label" style="margin:14px 0 8px">Classement des cotes</div>` +
+      ranked.map((f, i) => `
+      <div class="trend-item ${i===0?'rank-1':''}">
+        <div class="trend-rank">${i+1}</div>
+        <div class="trend-info">
+          <div class="trend-name">${f.chien}</div>
+          <div class="trend-handler">${f.conducteur} &middot; ${f.pts} pt${f.pts>1?'s':''}</div>
+          <div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.round(f.pts/maxPts*100)}%"></div></div>
         </div>
-        <div class="chrono-time ${r.disqualifie?'chrono-dq':''}">${r.disqualifie?'—':(r.temps_sec?.toFixed(2)+'s')}</div>
+        <div class="trend-index">${f.pts>0 ? f.cote.toFixed(2) : '—'}</div>
       </div>`).join('');
-  } catch(e) {}
-}
-
-async function renderTrend() {
-  const el = document.getElementById('trendDisplay');
-  try {
-    const allTickets = await sbGet('tickets', `cat=eq.${currentCat}&select=pick1,pick2,pick3`);
-    const dogs = finalists.filter(f => f.cat === currentCat);
-    const pts = {}; dogs.forEach(f => { pts[f.id]=0; });
-    let total = 0;
-    allTickets.forEach(t => { [t.pick1,t.pick2,t.pick3].forEach((id,i) => { if(id&&pts.hasOwnProperty(id)){pts[id]+=PODIUM_W[i];total+=PODIUM_W[i];} }); });
-    if (!dogs.length || total === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:.88rem">Pas encore de pronostics.</p>'; return; }
-    const maxPts = Math.max(...Object.values(pts), 1);
-    const ranked = dogs.map(f => ({...f, pts:pts[f.id], indice:pts[f.id]>0?total/pts[f.id]:Infinity})).sort((a,b)=>a.indice-b.indice).slice(0,3);
-    el.innerHTML = ranked.map((f,i) => `<div class="trend-item ${i===0?'rank-1':''}">
-      <div class="trend-rank">${i+1}</div>
-      <div class="trend-info">
-        <div class="trend-name">${f.chien}</div>
-        <div class="trend-handler">${f.conducteur} &middot; ${f.pts} pt${f.pts>1?'s':''}</div>
-        <div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.round(f.pts/maxPts*100)}%"></div></div>
-      </div>
-      <div class="trend-index">${f.pts>0?f.indice.toFixed(2):'—'}</div>
-    </div>`).join('');
-  } catch(e) {}
+  } catch(e) {
+    listEl.innerHTML = '<div class="alert alert-red">Erreur de chargement des cotes.</div>';
+  }
 }
 init();
 </script>
